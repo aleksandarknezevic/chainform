@@ -14,18 +14,21 @@ are roughly ordered and mapped to where they land in the codebase.
 - [x] CLI: `validate`, `plan`, `export`, `version` (`internal/cli`)
 - [x] Offline demo/mock readers for tests and `--mock`
 
-## Next
+## Next (priority order)
 
 - [ ] **ABI-driven resources.** Load a contract ABI and derive getters/setters
       instead of hand-writing them. Removes per-resource boilerplate and makes
-      arbitrary contracts manageable. Lands in `internal/resource` + a new
-      `internal/abi` loader.
+      arbitrary contracts manageable. This is the critical adoption gate: until
+      this works, users must write Go code to manage any contract. Lands in
+      `internal/resource` + a new `internal/abi` loader.
+- [ ] **`show` / state inspection.** Print actual on-chain state without
+      diffing. Lets a new user see value in under 30 seconds before writing
+      any HCL. New CLI command over `Resource.Refresh`.
+- [ ] **Plan output formats.** Machine-readable JSON plan (`--json`) alongside
+      the human renderer, for CI gating and GitOps workflows.
 - [ ] **Richer attribute types.** Addresses, arrays, structs, enums in specs;
       typed coercion from HCL. Extends spec parsing + `chain` type handling.
-- [ ] **`show` / state inspection.** Print actual on-chain state without
-      diffing, for debugging. New CLI command over `Resource.Refresh`.
-- [ ] **Plan output formats.** Machine-readable JSON plan (`--json`) alongside
-      the human renderer, for CI gating.
+      Becomes necessary once ABI-driven resources expose more complex state.
 
 ## Later
 
@@ -47,7 +50,7 @@ are roughly ordered and mapped to where they land in the codebase.
 ## Non-goals
 
 ChainForm is not a smart-contract framework, a deployment tool, a wallet, a key
-manager, or a block explorer. It manages *configuration state* of already
+manager, or a block explorer. It manages _configuration state_ of already
 deployed contracts.
 
 ## Design invariants to preserve
