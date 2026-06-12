@@ -11,7 +11,7 @@ version = "1"
 chain {
   name     = "ethereum"          # human-readable label
   chain_id = 1                   # EIP-155 chain id (required)
-  rpc      = env("ETH_RPC_URL")  # JSON-RPC endpoint; env() reads the environment
+  rpc      = env("RPC_URL")  # JSON-RPC endpoint; env() reads the environment
 }
 
 resource "protocol" "main" {     # resource "TYPE" "NAME"
@@ -24,19 +24,19 @@ resource "protocol" "main" {     # resource "TYPE" "NAME"
 
 ## Top level
 
-| Construct | Required | Notes |
-| --- | --- | --- |
-| `version` | no | Schema version. Currently `"1"`. |
-| `chain` block | yes | Target network. Exactly one. |
-| `resource` blocks | yes | At least one. |
+| Construct         | Required | Notes                            |
+| ----------------- | -------- | -------------------------------- |
+| `version`         | no       | Schema version. Currently `"1"`. |
+| `chain` block     | yes      | Target network. Exactly one.     |
+| `resource` blocks | yes      | At least one.                    |
 
 ## `chain` block
 
-| Attribute | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `name` | string | no | Display label only. |
-| `chain_id` | number | yes | Must be non-zero. |
-| `rpc` | string | yes for live runs | JSON-RPC URL. Use `env("VAR")` to keep secrets out of git. Not needed with `--mock`. |
+| Attribute  | Type   | Required          | Notes                                                                                |
+| ---------- | ------ | ----------------- | ------------------------------------------------------------------------------------ |
+| `name`     | string | no                | Display label only.                                                                  |
+| `chain_id` | number | yes               | Must be non-zero.                                                                    |
+| `rpc`      | string | yes for live runs | JSON-RPC URL. Use `env("VAR")` to keep secrets out of git. Not needed with `--mock`. |
 
 ## `resource "TYPE" "NAME"` blocks
 
@@ -47,25 +47,25 @@ resource "protocol" "main" { ... }
 #         ^type      ^name
 ```
 
-| Attribute | Required | Notes |
-| --- | --- | --- |
-| `address` | yes | 0x-prefixed contract address. |
-| *(others)* | depends on type | Desired attributes, validated by the provider. |
+| Attribute  | Required        | Notes                                          |
+| ---------- | --------------- | ---------------------------------------------- |
+| `address`  | yes             | 0x-prefixed contract address.                  |
+| _(others)_ | depends on type | Desired attributes, validated by the provider. |
 
 ### `protocol` (reference resource)
 
-| Attribute | Type | Operation when drifted |
-| --- | --- | --- |
-| `feeBps` | number (≥ 0) | `setFeeBps(uint256)` |
-| `paused` | bool | `pause()` / `unpause()` |
+| Attribute | Type         | Operation when drifted  |
+| --------- | ------------ | ----------------------- |
+| `feeBps`  | number (≥ 0) | `setFeeBps(uint256)`    |
+| `paused`  | bool         | `pause()` / `unpause()` |
 
 Only declared attributes are managed; omit one to leave it untouched.
 
 ## Functions
 
-| Function | Returns | Notes |
-| --- | --- | --- |
-| `env("NAME")` | string | The environment variable `NAME`, or empty if unset. Evaluated at load time. |
+| Function      | Returns | Notes                                                                       |
+| ------------- | ------- | --------------------------------------------------------------------------- |
+| `env("NAME")` | string  | The environment variable `NAME`, or empty if unset. Evaluated at load time. |
 
 Keep RPC URLs and API keys in the environment or a local `.env` (gitignored),
 not in the committed configuration.

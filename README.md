@@ -44,16 +44,16 @@ make build
 ./bin/chainform export -f examples/protocol.hcl --mock -o batch.json
 ```
 
-Run against a live network by setting `ETH_RPC_URL` and dropping `--mock`.
+Run against a live network by setting `RPC_URL` and dropping `--mock`.
 
 ## Commands
 
-| Command | Description |
-| --- | --- |
-| `chainform validate -f <file>` | Validate a configuration without contacting the chain |
-| `chainform plan -f <file>` | Read actual state, detect drift, print the plan |
+| Command                                    | Description                                               |
+| ------------------------------------------ | --------------------------------------------------------- |
+| `chainform validate -f <file>`             | Validate a configuration without contacting the chain     |
+| `chainform plan -f <file>`                 | Read actual state, detect drift, print the plan           |
 | `chainform export -f <file> -o batch.json` | Generate a plan and export it as a Safe transaction batch |
-| `chainform version` | Print the version |
+| `chainform version`                        | Print the version                                         |
 
 Add `--mock` to `plan`/`export` to use the offline demo reader.
 
@@ -88,5 +88,5 @@ Safe transactions.
 and Proxy resources, GitOps integration. See the [roadmap](docs/roadmap.md).
 
 ChainForm is **not** a smart-contract framework, a deployment tool, a wallet, a
-key manager, or a block explorer. It manages the *configuration state* of
+key manager, or a block explorer. It manages the _configuration state_ of
 already-deployed contracts.

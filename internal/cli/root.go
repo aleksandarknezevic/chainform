@@ -39,7 +39,7 @@ func openReader(ctx context.Context, cfg *config.Config, mock bool) (chain.Reade
 		return chain.DemoReader{}, func() {}, nil
 	}
 	if cfg.Chain.RPC == "" {
-		return nil, nil, errors.New(`chain.rpc is empty: set it (e.g. rpc = env("ETH_RPC_URL")) or pass --mock`)
+		return nil, nil, errors.New(`chain.rpc is empty: set it (e.g. rpc = env("RPC_URL")) or pass --mock`)
 	}
 	client, err := chain.Dial(ctx, cfg.Chain.RPC)
 	if err != nil {

@@ -1,10 +1,10 @@
 # ChainForm configuration — desired on-chain protocol state.
 #
 # Run against the offline demo reader (no RPC required):
-#   chainform plan   -f examples/protocol.hcl --mock
-#   chainform export -f examples/protocol.hcl --mock -o batch.json
+#   chainform plan   -f examples/chainform.hcl --mock
+#   chainform export -f examples/chainform.hcl --mock -o batch.json
 #
-# Run against a live network by setting ETH_RPC_URL and dropping --mock.
+# Run against a live network by setting RPC_URL and dropping --mock.
 
 version = "1"
 

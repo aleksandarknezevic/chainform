@@ -9,7 +9,7 @@
 //	chain {
 //	  name     = "ethereum"
 //	  chain_id = 1
-//	  rpc      = env("ETH_RPC_URL")
+//	  rpc      = env("RPC_URL")
 //	}
 //
 //	resource "protocol" "main" {

@@ -25,7 +25,7 @@ supplies intentionally-drifted state:
 ./bin/chainform export -f examples/protocol.hcl --mock -o batch.json
 ```
 
-Drop `--mock` and set `ETH_RPC_URL` to run against a live network.
+Drop `--mock` and set `RPC_URL` to run against a live network.
 
 ## Layout
 
