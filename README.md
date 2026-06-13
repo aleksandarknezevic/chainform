@@ -76,6 +76,16 @@ That feed is read-only, so nothing can be _managed_ — but an `expect` block
 asserts what its getters should return and reports **read-only drift** (a
 warning that never becomes a transaction) when they don't.
 
+Don't want to write HCL by hand? Bootstrap a config straight from a deployed
+contract with `import` — managed (getter+setter) attributes and read-only
+`expect` assertions are filled in from current on-chain state:
+
+```bash
+./bin/chainform import --abi testdata/aggregator.abi.json \
+  --address 0x694AA1769357215DE4FAC081bf1f309aDC325306 \
+  --name ethUsdFeed --chain-id 11155111 --mock -o feed.hcl
+```
+
 Run against a live network by setting `RPC_URL` and dropping `--mock`.
 
 ## Commands
@@ -83,12 +93,13 @@ Run against a live network by setting `RPC_URL` and dropping `--mock`.
 | Command                                    | Description                                               |
 | ------------------------------------------ | --------------------------------------------------------- |
 | `chainform validate -f <file>`             | Validate a configuration without contacting the chain     |
+| `chainform import --address <a> --abi <f>` | Generate a config from a live contract's current state    |
 | `chainform show -f <file>`                 | Print actual on-chain state, without diffing              |
 | `chainform plan -f <file>`                 | Read actual state, detect drift, print the plan           |
 | `chainform export -f <file> -o batch.json` | Generate a plan and export it as a Safe transaction batch |
 | `chainform version`                        | Print the version                                         |
 
-Add `--mock` to `show`/`plan`/`export` to use the offline demo reader.
+Add `--mock` to `import`/`show`/`plan`/`export` to use the offline demo reader.
 
 ## Project layout
 
@@ -116,14 +127,14 @@ docs/               architecture, concepts, configuration, roadmap
 ## Scope
 
 **Now:** EVM chains; declarative HCL config; read on-chain contract state;
-ABI-driven resources (auto-derived getters/setters); drift detection and
-Terraform-style plans; read-only assertions (`expect`); state inspection
-(`show`); Safe / Gnosis Safe transaction-batch export.
+ABI-driven resources (auto-derived getters/setters); config bootstrap from a
+live contract (`import`); drift detection and Terraform-style plans; read-only
+assertions (`expect`); state inspection (`show`); Safe / Gnosis Safe
+transaction-batch export.
 
 **Later:** apply engine, governance simulation, multi-chain reconciliation,
-config bootstrap from a live contract (`import`), continuous drift monitoring
-(`watch`/alerts), AccessControl / Proxy / Timelock resources, deeper GitOps
-integration. See the [roadmap](docs/roadmap.md).
+continuous drift monitoring (`watch`/alerts), AccessControl / Proxy / Timelock
+resources, deeper GitOps integration. See the [roadmap](docs/roadmap.md).
 
 ChainForm is **not** a smart-contract framework, a deployment tool, a wallet, a
 key manager, or a block explorer. It is a declarative configuration-management

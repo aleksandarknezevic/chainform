@@ -3,7 +3,9 @@
 A ChainForm configuration is an HCL document — the same language Terraform uses
 — describing the target chain and the resources to manage. See
 [`examples/protocol.hcl`](../examples/protocol.hcl) for a complete, runnable
-example.
+example. You can also generate one from a deployed contract with
+`chainform import` (see [Commands](../README.md#commands)) instead of writing it
+by hand.
 
 ```hcl
 version = "1"

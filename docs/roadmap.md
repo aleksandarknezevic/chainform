@@ -19,6 +19,9 @@ are roughly ordered and mapped to where they land in the codebase.
       (`chainform show`, over the `resource.Inspector` capability)
 - [x] Read-only assertions: `expect` blocks check getter-only values and report
       read-only drift as warnings, never as operations (`resource.Asserter`)
+- [x] `import`: bootstrap a config from a live contract's current state — managed
+      attributes + `expect` assertions, round-trips to a no-drift plan
+      (`chainform import`, `config.WriteResource`)
 
 ## Next (priority order)
 
