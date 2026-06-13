@@ -25,6 +25,7 @@ func NewRootCmd(version string) *cobra.Command {
 
 	root.AddCommand(
 		newValidateCmd(),
+		newShowCmd(),
 		newPlanCmd(),
 		newExportCmd(),
 		newVersionCmd(version),

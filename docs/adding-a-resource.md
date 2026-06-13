@@ -7,6 +7,13 @@ changes to the planner, CLI, or config schema are required.
 Use [`internal/resource/protocol.go`](../internal/resource/protocol.go) as the
 working template.
 
+> Before writing a new type, check whether the ABI-driven `contract` resource
+> already covers your case: if the contract exposes `X()` getters and `setX(...)`
+> setters, you can manage it from configuration alone (see the
+> [configuration reference](configuration.md#contract-abi-driven-resource)). Add
+> a new type when you need custom logic — multi-call operations, derived state,
+> or naming that doesn't follow the `setX` convention.
+
 ## 1. Implement `resource.Resource`
 
 ```go

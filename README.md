@@ -44,6 +44,18 @@ make build
 ./bin/chainform export -f examples/protocol.hcl --mock -o batch.json
 ```
 
+Or inspect a contract's live state with no config to write — `examples/feed.hcl`
+points at the real Chainlink ETH/USD price feed on Sepolia:
+
+```bash
+./bin/chainform show -f examples/feed.hcl --mock          # canned demo values
+RPC_URL=<sepolia-rpc> ./bin/chainform show -f examples/feed.hcl   # live on-chain
+```
+
+That feed is read-only, so nothing can be *managed* — but an `expect` block
+asserts what its getters should return and reports **read-only drift** (a
+warning that never becomes a transaction) when they don't.
+
 Run against a live network by setting `RPC_URL` and dropping `--mock`.
 
 ## Commands
@@ -51,11 +63,12 @@ Run against a live network by setting `RPC_URL` and dropping `--mock`.
 | Command                                    | Description                                               |
 | ------------------------------------------ | --------------------------------------------------------- |
 | `chainform validate -f <file>`             | Validate a configuration without contacting the chain     |
+| `chainform show -f <file>`                 | Print actual on-chain state, without diffing              |
 | `chainform plan -f <file>`                 | Read actual state, detect drift, print the plan           |
 | `chainform export -f <file> -o batch.json` | Generate a plan and export it as a Safe transaction batch |
 | `chainform version`                        | Print the version                                         |
 
-Add `--mock` to `plan`/`export` to use the offline demo reader.
+Add `--mock` to `show`/`plan`/`export` to use the offline demo reader.
 
 ## Project layout
 
@@ -63,7 +76,8 @@ Add `--mock` to `plan`/`export` to use the offline demo reader.
 cmd/chainform/      CLI entrypoint
 internal/config/    desired-state schema + loader
 internal/chain/     EVM reads, ABI encode/decode, live + mock readers
-internal/resource/  Resource contract, registry, reference "protocol" resource
+internal/abi/       ABI loader; derives getters/setters for ABI-driven resources
+internal/resource/  Resource contract, registry, "protocol" + ABI-driven "contract"
 internal/plan/      reconciliation (refresh → diff → plan) + rendering
 internal/export/    Safe transaction batch export
 examples/           runnable example configuration

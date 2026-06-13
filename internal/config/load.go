@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 )
@@ -27,10 +28,9 @@ type hclChain struct {
 }
 
 type hclResource struct {
-	Type    string   `hcl:"type,label"`
-	Name    string   `hcl:"name,label"`
-	Address string   `hcl:"address"`
-	Spec    hcl.Body `hcl:",remain"` // type-specific attributes
+	Type string   `hcl:"type,label"`
+	Name string   `hcl:"name,label"`
+	Body hcl.Body `hcl:",remain"` // address, type-specific attributes, expect block
 }
 
 // Load reads, parses, and validates a configuration file.
@@ -68,15 +68,16 @@ func Parse(raw []byte, filename string) (*Config, error) {
 		},
 	}
 	for _, r := range root.Resources {
-		spec, err := decodeSpec(r.Spec, ctx)
+		address, spec, expect, err := decodeResourceBody(r.Body, ctx)
 		if err != nil {
 			return nil, fmt.Errorf("resource %q %q: %w", r.Type, r.Name, err)
 		}
 		cfg.Resources = append(cfg.Resources, ResourceConfig{
 			Type:    r.Type,
 			Name:    r.Name,
-			Address: r.Address,
+			Address: address,
 			Spec:    spec,
+			Expect:  expect,
 		})
 	}
 
@@ -86,26 +87,84 @@ func Parse(raw []byte, filename string) (*Config, error) {
 	return cfg, nil
 }
 
-// decodeSpec evaluates the remaining attributes of a resource block into a
-// generic attribute map for the resource provider to interpret.
-func decodeSpec(body hcl.Body, ctx *hcl.EvalContext) (map[string]any, error) {
-	attrs, diags := body.JustAttributes()
-	if diags.HasErrors() {
-		return nil, fmt.Errorf("%s", diags.Error())
+// decodeResourceBody splits a resource block body into its address, its
+// type-specific spec attributes, and any read-only `expect` block.
+//
+// It reads attributes directly from the native-HCL body rather than via
+// Body.JustAttributes, because a resource body may also contain an `expect`
+// block and JustAttributes rejects any body that contains a block — even one
+// that has already been consumed.
+func decodeResourceBody(body hcl.Body, ctx *hcl.EvalContext) (address string, spec, expect map[string]any, err error) {
+	hb, ok := body.(*hclsyntax.Body)
+	if !ok {
+		return "", nil, nil, fmt.Errorf("unsupported configuration syntax (expected native HCL)")
 	}
-	spec := make(map[string]any, len(attrs))
-	for name, attr := range attrs {
-		val, diags := attr.Expr.Value(ctx)
-		if diags.HasErrors() {
-			return nil, fmt.Errorf("%s: %s", name, diags.Error())
-		}
-		gv, err := ctyToGo(val)
+
+	spec = make(map[string]any, len(hb.Attributes))
+	for name, attr := range hb.Attributes {
+		gv, err := evalAttr(name, attr, ctx)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", name, err)
+			return "", nil, nil, err
+		}
+		if name == "address" {
+			s, ok := gv.(string)
+			if !ok {
+				return "", nil, nil, fmt.Errorf("address must be a string, got %T", gv)
+			}
+			address = s
+			continue
 		}
 		spec[name] = gv
 	}
-	return spec, nil
+
+	for _, blk := range hb.Blocks {
+		if blk.Type != "expect" {
+			return "", nil, nil, fmt.Errorf("unexpected %q block", blk.Type)
+		}
+		if expect != nil {
+			return "", nil, nil, fmt.Errorf("at most one expect block is allowed")
+		}
+		expect, err = decodeAttrs(blk.Body, ctx)
+		if err != nil {
+			return "", nil, nil, fmt.Errorf("expect: %w", err)
+		}
+	}
+
+	return address, spec, expect, nil
+}
+
+// decodeAttrs evaluates all attributes of a (sub-)block body into a generic
+// attribute map. The body must contain attributes only, no nested blocks.
+func decodeAttrs(body hcl.Body, ctx *hcl.EvalContext) (map[string]any, error) {
+	hb, ok := body.(*hclsyntax.Body)
+	if !ok {
+		return nil, fmt.Errorf("unsupported configuration syntax (expected native HCL)")
+	}
+	if len(hb.Blocks) > 0 {
+		return nil, fmt.Errorf("unexpected %q block", hb.Blocks[0].Type)
+	}
+	out := make(map[string]any, len(hb.Attributes))
+	for name, attr := range hb.Attributes {
+		gv, err := evalAttr(name, attr, ctx)
+		if err != nil {
+			return nil, err
+		}
+		out[name] = gv
+	}
+	return out, nil
+}
+
+// evalAttr evaluates a single attribute expression into a plain Go value.
+func evalAttr(name string, attr *hclsyntax.Attribute, ctx *hcl.EvalContext) (any, error) {
+	val, diags := attr.Expr.Value(ctx)
+	if diags.HasErrors() {
+		return nil, fmt.Errorf("%s: %s", name, diags.Error())
+	}
+	gv, err := ctyToGo(val)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", name, err)
+	}
+	return gv, nil
 }
 
 // ctyToGo converts a cty scalar value into a plain Go value. Integers are

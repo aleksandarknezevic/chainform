@@ -31,8 +31,10 @@ A managed on-chain entity, analogous to a Terraform resource. A resource type
 - **Plan** — compare desired vs. actual and emit the operations to converge.
 
 Resources implement the [`resource.Resource`](../internal/resource/resource.go)
-interface. The shipped reference type is `protocol` (manages `feeBps` and
-`paused`); it exists to demonstrate the contract end to end.
+interface. Two types ship today: `protocol`, a hand-written reference type
+(manages `feeBps` and `paused`) that demonstrates the contract end to end; and
+`contract`, an ABI-driven type that derives its getters and setters from a
+loaded ABI so arbitrary contracts can be managed without writing Go.
 
 ## Operation
 

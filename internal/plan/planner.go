@@ -50,6 +50,15 @@ func (p *Planner) Run(ctx context.Context) (*Plan, error) {
 			ops[i].Calldata = data
 			out.Operations = append(out.Operations, ops[i])
 		}
+
+		// Read-only assertions (expect blocks) are reported, never executed.
+		if a, ok := res.(resource.Asserter); ok {
+			assertions, err := a.Assert(current)
+			if err != nil {
+				return nil, fmt.Errorf("assert %s/%s: %w", res.Type(), res.Name(), err)
+			}
+			out.Assertions = append(out.Assertions, assertions...)
+		}
 	}
 
 	return out, nil

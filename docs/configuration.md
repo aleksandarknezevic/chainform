@@ -61,6 +61,65 @@ resource "protocol" "main" { ... }
 
 Only declared attributes are managed; omit one to leave it untouched.
 
+### `contract` (ABI-driven resource)
+
+Manages any contract without hand-written Go. Point it at an ABI file and
+declare the attributes you care about; each attribute `X` is read via the
+getter `X()` and reconciled via the setter `setX(...)`, both derived from the
+ABI. See [`examples/contract.hcl`](../examples/contract.hcl).
+
+```hcl
+resource "contract" "protocol" {
+  address = "0x..."
+  abi     = "testdata/protocol.abi.json"  # path relative to the working dir
+
+  feeBps = 30                              # read feeBps(), set via setFeeBps()
+  paused = false                           # read paused(), set via setPaused()
+}
+```
+
+| Attribute  | Required | Notes                                                                                    |
+| ---------- | -------- | ---------------------------------------------------------------------------------------- |
+| `abi`      | yes      | Path to the contract ABI JSON, resolved relative to the working directory.               |
+| _(others)_ | no       | Each must have a matching getter `X()` and setter `setX(T)` of the same type in the ABI. |
+
+Supported attribute types: `bool`, `string`, `address`, and the integer types
+`uintN` / `intN`. An attribute with a getter but no `setX` setter (a read-only
+value) cannot be managed, and declaring it as a top-level attribute is an error
+— use an [`expect` block](#expect-block--read-only-assertions) to assert it
+instead. Only declared attributes are read and managed; omit one to leave it
+untouched.
+
+A `contract` with no managed attributes is valid — it is read-only and
+produces no operations, but `chainform show` still prints every getter derived
+from its ABI. [`examples/feed.hcl`](../examples/feed.hcl) does exactly this for
+the live Chainlink ETH/USD price feed on Sepolia.
+
+#### `expect` block — read-only assertions
+
+Some values have a getter but no setter, so they cannot be managed — but you
+may still want to assert what they should be and be warned if they drift. An
+`expect` block declares those read-only invariants:
+
+```hcl
+resource "contract" "ethUsdFeed" {
+  address = "0x694AA1769357215DE4FAC081bf1f309aDC325306"
+  abi     = "testdata/aggregator.abi.json"
+
+  expect {
+    decimals    = 8
+    description = "ETH / USD"
+  }
+}
+```
+
+Each `expect` attribute needs only a getter `X()` in the ABI (no setter). On
+`plan`, ChainForm reads the getter and, if the value differs from the
+expectation, reports it as **read-only drift** — a warning that is never turned
+into a transaction (there is no setter to call), so `export` is unaffected. An
+attribute cannot be both managed (top-level) and expected. Only the ABI-driven
+`contract` resource supports `expect`.
+
 ## Functions
 
 | Function      | Returns | Notes                                                                       |

@@ -36,6 +36,9 @@ func newProtocol(cfg config.ResourceConfig) (Resource, error) {
 	if !common.IsHexAddress(cfg.Address) {
 		return nil, fmt.Errorf("protocol %q: invalid address %q", cfg.Name, cfg.Address)
 	}
+	if len(cfg.Expect) > 0 {
+		return nil, fmt.Errorf("protocol %q: expect blocks are only supported by the ABI-driven \"contract\" resource", cfg.Name)
+	}
 	spec, err := parseProtocolSpec(cfg.Spec)
 	if err != nil {
 		return nil, fmt.Errorf("protocol %q: %w", cfg.Name, err)

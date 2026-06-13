@@ -29,10 +29,11 @@ minimal set of operations needed to converge them.
 | --- | --- | --- |
 | `internal/config` | Desired-state schema, HCL loader, validation | — |
 | `internal/chain` | EVM reads (`Reader`), ABI encode/decode, live + mock readers | go-ethereum |
-| `internal/resource` | `Resource` contract, `Operation`, type registry, reference resource | `config`, `chain` |
+| `internal/abi` | ABI loader; derives getters/setters/attributes for ABI-driven resources | go-ethereum |
+| `internal/resource` | `Resource` contract, `Operation`, type registry, `protocol` + ABI-driven `contract` | `config`, `chain`, `abi` |
 | `internal/plan` | Reconciliation pass + human-readable rendering | `config`, `chain`, `resource` |
 | `internal/export` | Render a plan into executable formats (Safe batch) | `plan` |
-| `internal/cli` | Cobra command tree (`validate`, `plan`, `export`, `version`) | all of the above |
+| `internal/cli` | Cobra command tree (`validate`, `show`, `plan`, `export`, `version`) | all of the above |
 | `cmd/chainform` | Entrypoint | `cli` |
 
 Dependencies point in one direction. `chain` knows nothing about resources or

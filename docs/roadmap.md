@@ -13,17 +13,15 @@ are roughly ordered and mapped to where they land in the codebase.
 - [x] Safe Transaction Builder export (`internal/export`)
 - [x] CLI: `validate`, `plan`, `export`, `version` (`internal/cli`)
 - [x] Offline demo/mock readers for tests and `--mock`
+- [x] ABI-driven `contract` resource: derive getters/setters from a loaded ABI
+      (`internal/abi` + `internal/resource/contract.go`)
+- [x] `show` / state inspection: print actual on-chain state without diffing
+      (`chainform show`, over the `resource.Inspector` capability)
+- [x] Read-only assertions: `expect` blocks check getter-only values and report
+      read-only drift as warnings, never as operations (`resource.Asserter`)
 
 ## Next (priority order)
 
-- [ ] **ABI-driven resources.** Load a contract ABI and derive getters/setters
-      instead of hand-writing them. Removes per-resource boilerplate and makes
-      arbitrary contracts manageable. This is the critical adoption gate: until
-      this works, users must write Go code to manage any contract. Lands in
-      `internal/resource` + a new `internal/abi` loader.
-- [ ] **`show` / state inspection.** Print actual on-chain state without
-      diffing. Lets a new user see value in under 30 seconds before writing
-      any HCL. New CLI command over `Resource.Refresh`.
 - [ ] **Plan output formats.** Machine-readable JSON plan (`--json`) alongside
       the human renderer, for CI gating and GitOps workflows.
 - [ ] **Richer attribute types.** Addresses, arrays, structs, enums in specs;
@@ -59,4 +57,6 @@ deployed contracts.
   step.
 - Resources depend only on `chain.Reader`, never on a concrete client.
 - A resource with no drift produces no operations.
+- Read-only drift (`expect` assertions) is reported as a warning, never turned
+  into an operation — there is no setter to execute.
 - ABI encoding stays centralized in `internal/chain`.

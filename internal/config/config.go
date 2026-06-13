@@ -66,6 +66,11 @@ type ResourceConfig struct {
 
 	// Spec holds the desired attributes, interpreted by the resource provider.
 	Spec map[string]any
+
+	// Expect holds read-only assertions declared in an `expect` block: expected
+	// values for attributes that have a getter but no setter. Drift on these is
+	// reported but never converged into an operation.
+	Expect map[string]any
 }
 
 // Validate performs schema-level checks that are independent of any provider.

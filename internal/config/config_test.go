@@ -54,6 +54,42 @@ resource "protocol" "main" {
 	}
 }
 
+func TestParseExpectBlock(t *testing.T) {
+	raw := []byte(`
+chain {
+  chain_id = 1
+}
+
+resource "contract" "feed" {
+  address = "0x0000000000000000000000000000000000000001"
+  abi     = "feed.abi.json"
+
+  expect {
+    decimals    = 8
+    description = "ETH / USD"
+  }
+}
+`)
+	cfg, err := Parse(raw, "test.hcl")
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	r := cfg.Resources[0]
+	if r.Spec["abi"] != "feed.abi.json" {
+		t.Errorf("abi = %v, want feed.abi.json", r.Spec["abi"])
+	}
+	// expect attributes go into Expect, not Spec.
+	if _, ok := r.Spec["decimals"]; ok {
+		t.Error("expect attribute leaked into spec")
+	}
+	if r.Expect["decimals"] != 8 {
+		t.Errorf("expect.decimals = %v, want 8", r.Expect["decimals"])
+	}
+	if r.Expect["description"] != "ETH / USD" {
+		t.Errorf("expect.description = %v", r.Expect["description"])
+	}
+}
+
 func TestParseSyntaxError(t *testing.T) {
 	if _, err := Parse([]byte(`chain { = }`), "bad.hcl"); err == nil {
 		t.Error("expected parse error")
