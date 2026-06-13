@@ -1,17 +1,37 @@
 # ChainForm
 
-Infrastructure as Code for blockchain protocols.
+**Declarative, GitOps-friendly management of on-chain smart-contract state for
+EVM protocols.** Infrastructure as Code (IaC) for blockchain - Terraform for
+deployed contracts.
 
-ChainForm lets protocol teams define desired on-chain state in code, detect
-configuration drift, and generate safe, reviewable operations before execution.
+ChainForm lets protocol teams declare the desired _configuration state_ of their
+deployed contracts in version-controlled HCL, read the actual state from the
+chain, detect configuration drift, and review a Terraform-style plan before
+anything executes. Approved changes are exported as a Safe (Gnosis Safe)
+multisig transaction batch.
 
-It behaves like a Kubernetes controller's reconciliation loop rather than a
-deployment tool: continuously compare desired state with actual on-chain state
-and produce the minimal set of operations needed to converge them.
+Think Terraform / Kubernetes reconciliation, but for the configuration state of
+already-deployed EVM contracts — fees, roles, owners, pause switches, treasury
+and admin addresses.
 
 ```
 Desired State (Git) → ChainForm → Plan → Drift Detection → Operations → Safe / Governance / Apply
 ```
+
+## Why ChainForm
+
+- **Declarative desired state** — your protocol's intended configuration lives in
+  Git as HCL, not in ad-hoc scripts, Etherscan tabs, or someone's memory.
+- **Drift detection** — compare on-chain reality against desired state and see
+  exactly what changed; read-only values (no setter) are reported as drift but
+  never turned into transactions.
+- **Reviewable diffs** — every change is a human-readable, Terraform-style plan
+  you can review in a pull request and approve before execution.
+- **GitOps workflow** — commit desired state → run `chainform plan` in CI →
+  review the diff on the PR → export a Safe batch for multisig execution.
+  Planning never touches keys and never sends transactions.
+- **ABI-driven** — point it at any contract ABI and it derives the getters and
+  setters automatically; no per-contract Go code to manage arbitrary contracts.
 
 ## Example
 
@@ -52,7 +72,7 @@ points at the real Chainlink ETH/USD price feed on Sepolia:
 RPC_URL=<sepolia-rpc> ./bin/chainform show -f examples/feed.hcl   # live on-chain
 ```
 
-That feed is read-only, so nothing can be *managed* — but an `expect` block
+That feed is read-only, so nothing can be _managed_ — but an `expect` block
 asserts what its getters should return and reports **read-only drift** (a
 warning that never becomes a transaction) when they don't.
 
@@ -95,12 +115,23 @@ docs/               architecture, concepts, configuration, roadmap
 
 ## Scope
 
-**Now:** EVM chains, read contract state, detect drift, generate plans, export
-Safe transactions.
+**Now:** EVM chains; declarative HCL config; read on-chain contract state;
+ABI-driven resources (auto-derived getters/setters); drift detection and
+Terraform-style plans; read-only assertions (`expect`); state inspection
+(`show`); Safe / Gnosis Safe transaction-batch export.
 
-**Later:** apply engine, simulation, multi-chain reconciliation, AccessControl
-and Proxy resources, GitOps integration. See the [roadmap](docs/roadmap.md).
+**Later:** apply engine, governance simulation, multi-chain reconciliation,
+config bootstrap from a live contract (`import`), continuous drift monitoring
+(`watch`/alerts), AccessControl / Proxy / Timelock resources, deeper GitOps
+integration. See the [roadmap](docs/roadmap.md).
 
 ChainForm is **not** a smart-contract framework, a deployment tool, a wallet, a
-key manager, or a block explorer. It manages the _configuration state_ of
-already-deployed contracts.
+key manager, or a block explorer. It is a declarative configuration-management
+and drift-detection tool for the _state_ of already-deployed contracts.
+
+---
+
+<sub>Keywords: smart contract configuration management · on-chain state drift
+detection · declarative infrastructure as code for EVM / Ethereum protocols ·
+GitOps for smart contracts · Terraform-style plan & diff · Gnosis Safe multisig
+transaction batches.</sub>
