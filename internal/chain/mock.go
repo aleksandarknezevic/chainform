@@ -54,6 +54,8 @@ func (DemoReader) Read(_ context.Context, call ViewCall) ([]any, error) {
 		return []any{big.NewInt(50)}, nil
 	case "paused":
 		return []any{true}, nil
+	case "name":
+		return []any{"Demo Protocol"}, nil
 
 	// price feed (read-only; inspected via `show`)
 	case "decimals":
