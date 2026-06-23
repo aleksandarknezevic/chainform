@@ -36,6 +36,7 @@ func newValidateCmd() *cobra.Command {
 func newPlanCmd() *cobra.Command {
 	var file string
 	var mock bool
+	var asJSON bool
 	cmd := &cobra.Command{
 		Use:   "plan",
 		Short: "Show the operations required to converge on-chain state to desired state",
@@ -44,12 +45,16 @@ func newPlanCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if asJSON {
+				return p.RenderJSON(cmd.OutOrStdout())
+			}
 			p.Render(cmd.OutOrStdout())
 			return nil
 		},
 	}
 	cmd.Flags().StringVarP(&file, "file", "f", defaultConfigFile, "path to configuration file")
 	cmd.Flags().BoolVar(&mock, "mock", false, "use the offline demo reader instead of a live RPC endpoint")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "emit the plan as machine-readable JSON")
 	return cmd
 }
 

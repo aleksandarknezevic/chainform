@@ -25,7 +25,7 @@ are roughly ordered and mapped to where they land in the codebase.
 
 ## Next (priority order)
 
-- [ ] **Plan output formats.** Machine-readable JSON plan (`--json`) alongside
+- [x] **Plan output formats.** Machine-readable JSON plan (`--json`) alongside
       the human renderer, for CI gating and GitOps workflows.
 - [ ] **Richer attribute types.** Addresses, arrays, structs, enums in specs;
       typed coercion from HCL. Extends spec parsing + `chain` type handling.

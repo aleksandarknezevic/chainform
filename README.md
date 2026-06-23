@@ -90,6 +90,21 @@ Generate a reconciliation plan — the drift between desired and actual state:
 chainform plan -f protocol.hcl
 ```
 
+Need a machine-readable plan for CI or GitOps checks?
+
+```bash
+chainform plan -f protocol.hcl --json
+```
+
+Example CI gate (fail if any operations are proposed):
+
+```bash
+chainform plan -f protocol.hcl --json | jq -e '.summary.operationCount == 0'
+```
+
+JSON field-by-field reference is documented in
+**[Plan JSON format](docs/plan-json.md)**.
+
 Example output:
 
 ```
@@ -133,6 +148,9 @@ An immediate `plan` against the freshly imported config reports no drift, so you
 can adopt ChainForm gradually without rebuilding existing operational workflows.
 Add `--mock` to try it offline.
 
+👉 See the full **[import → plan → export walkthrough](docs/walkthrough.md)** —
+a copy-pasteable, offline end-to-end example.
+
 ## Commands
 
 ```bash
@@ -140,6 +158,7 @@ chainform validate   # check a config without contacting the chain
 chainform import     # generate a config from a live contract
 chainform show       # print actual on-chain state, without diffing
 chainform plan       # detect drift and print the reconciliation plan
+chainform plan --json # emit a machine-readable JSON plan (CI/GitOps friendly)
 chainform export     # export the plan as a Safe transaction batch
 chainform version    # print the version
 ```
@@ -185,11 +204,11 @@ A more accurate analogy is:
 
 ### Next
 
-- Ownable resources
+- Richer attribute types (addresses, arrays, structs, enums)
 - AccessControl resources
-- ProxyAdmin resources
-- Timelock resources
-- Multi-chain support
+- Proxy resources
+- Apply engine (explicit execution step, separate from planning)
+- Multi-chain reconciliation
 
 ### Future
 
