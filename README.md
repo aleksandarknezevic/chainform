@@ -5,7 +5,7 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/aleksandarknezevic/chainform)](https://github.com/aleksandarknezevic/chainform/blob/main/go.mod)
 [![License](https://img.shields.io/github/license/aleksandarknezevic/chainform)](https://github.com/aleksandarknezevic/chainform/blob/main/LICENSE)
 
-**Infrastructure as Code and Configuration Management for Blockchain Protocols**
+## Infrastructure as Code and Configuration Management for Blockchain Protocols
 
 ChainForm is a declarative configuration management tool for blockchain protocols.
 
