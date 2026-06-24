@@ -51,8 +51,8 @@ resource "contract" "main" {
 Two kinds of attributes are derived from the ABI:
 
 - **Managed** (top-level): values with both a getter and a `setX` setter —
-  `feeBps`/`setFeeBps`, `owner`/`setOwner`, `paused`/`setPaused`. ChainForm can
-  reconcile these.
+  `feeBps`/`setFeeBps`, `owner`/`setOwner`, `paused`/`pause`+`unpause` (or
+  `setPaused` when toggle methods are absent). ChainForm can reconcile these.
 - **`expect`** (read-only): values with a getter but no setter — `name`. These
   can drift but can never be changed, so they are asserted, not managed.
 

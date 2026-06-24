@@ -92,7 +92,9 @@ Only declared attributes are managed; omit one to leave it untouched.
 Manages any contract without hand-written Go. Point it at an ABI file and
 declare the attributes you care about; each attribute `X` is read via the
 getter `X()` and reconciled via the setter `setX(...)`, both derived from the
-ABI. See [`examples/contract.hcl`](../examples/contract.hcl).
+ABI. For bool `paused`, `pause()`/`unpause()` are preferred when present
+(OpenZeppelin Pausable); otherwise `setPaused(bool)` is used. See
+[`examples/contract.hcl`](../examples/contract.hcl).
 
 ```hcl
 resource "contract" "protocol" {
@@ -100,7 +102,7 @@ resource "contract" "protocol" {
   abi     = "testdata/protocol.abi.json"  # path relative to the working dir
 
   feeBps = 30                              # read feeBps(), set via setFeeBps()
-  paused = false                           # read paused(), set via setPaused()
+  paused = false                           # read paused(); pause()/unpause() or setPaused()
 }
 ```
 
@@ -163,4 +165,10 @@ local/non-committed when they include secrets).
 
 `chainform validate -f <file>` runs parsing (HCL or JSON), schema-level checks
 (required fields, non-zero chain id, unique resource names), and provider-level
-checks (valid address, known attributes) without contacting the chain.
+checks without contacting the chain. Each resource is built (`resource.Build`):
+unknown types, invalid addresses, missing ABI files, and attributes without a
+matching getter/setter pair are rejected.
+
+`chainform plan` exits with code **0** when there is no drift and **1** when
+managed attributes differ or an `expect` assertion fails (the plan is still
+printed to stdout). Use this for simple CI gates without parsing JSON.

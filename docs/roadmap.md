@@ -22,14 +22,20 @@ are roughly ordered and mapped to where they land in the codebase.
 - [x] `import`: bootstrap a config from a live contract's current state — managed
       attributes + `expect` assertions, round-trips to a no-drift plan
       (`chainform import`, `config.WriteResource`)
+- [x] Provider-level `validate`: builds each resource (ABI paths, known
+      attributes, setter/getter pairs) without contacting the chain.
+- [x] Bool toggle patterns for `contract` resources: `pause()`/`unpause()` for
+      `paused` when present in the ABI (preferred over `setPaused(bool)`).
+- [x] `plan` exits with code 1 when drift is detected (managed operations or
+      failed `expect` assertions), so CI can gate without parsing JSON.
 
 ## Next (priority order)
 
 - [x] **Plan output formats.** Machine-readable JSON plan (`--json`) alongside
       the human renderer, for CI gating and GitOps workflows.
-- [ ] **Richer attribute types.** Addresses, arrays, structs, enums in specs;
-      typed coercion from HCL. Extends spec parsing + `chain` type handling.
-      Becomes necessary once ABI-driven resources expose more complex state.
+- [ ] **Richer attribute types.** Arrays, structs, enums in specs; typed
+      coercion from HCL. Extends spec parsing + `chain` type handling.
+      (Addresses and integers are supported today.)
 
 ## Later
 
@@ -45,8 +51,14 @@ are roughly ordered and mapped to where they land in the codebase.
       Tally-compatible) as an alternative to Safe batches.
 - [ ] **Multi-chain reconciliation.** One config spanning several chains, with
       per-chain plans.
-- [ ] **GitOps integration.** Run `plan` on PRs and post the diff; gate merges
-      on no-unexpected-drift.
+- [ ] **Scheduled drift detection.** Reconciliation is on-demand today (`chainform
+      plan`). Periodic checks via cron or a Kubernetes CronJob are a supported
+      workaround; a built-in watch loop or daemon is not implemented yet.
+- [ ] **GitOps PR integration.** Post plan output on pull requests and gate merges.
+      Today: `plan` exit codes, `--json`, and shell/`jq` scripting in CI.
+- [ ] **Selective import.** `import` reads every ABI getter in one pass. Filters
+      (`--include`/`--exclude`), batching, and graceful skip on revert are needed
+      for large production contracts.
 
 ## Non-goals
 

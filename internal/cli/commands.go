@@ -24,6 +24,9 @@ func newValidateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if err := ValidateConfig(cfg); err != nil {
+				return err
+			}
 			fmt.Fprintf(cmd.OutOrStdout(), "OK: %d resource(s) on %s (chainId %d)\n",
 				len(cfg.Resources), cfg.Chain.Name, cfg.Chain.ChainID)
 			return nil
@@ -46,15 +49,22 @@ func newPlanCmd() *cobra.Command {
 				return err
 			}
 			if asJSON {
-				return p.RenderJSON(cmd.OutOrStdout())
+				if err := p.RenderJSON(cmd.OutOrStdout()); err != nil {
+					return err
+				}
+			} else {
+				p.Render(cmd.OutOrStdout())
 			}
-			p.Render(cmd.OutOrStdout())
+			if p.HasDrift() {
+				return &ExitError{Code: 1}
+			}
 			return nil
 		},
 	}
 	cmd.Flags().StringVarP(&file, "file", "f", defaultConfigFile, "path to configuration file")
 	cmd.Flags().BoolVar(&mock, "mock", false, "use the offline demo reader instead of a live RPC endpoint")
 	cmd.Flags().BoolVar(&asJSON, "json", false, "emit the plan as machine-readable JSON")
+	cmd.SilenceErrors = true // drift uses ExitError; real errors are printed by main
 	return cmd
 }
 

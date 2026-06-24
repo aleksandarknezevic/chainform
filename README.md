@@ -32,7 +32,8 @@ This creates several problems:
 - inconsistent settings across deployments
 - poor change visibility
 
-ChainForm continuously compares desired state with actual on-chain state, detects drift, and generates the minimal set of operations required to reconcile them.
+ChainForm compares desired state with actual on-chain state at plan time,
+detects drift, and generates the minimal set of operations required to reconcile them.
 
 ## Features
 
@@ -101,7 +102,14 @@ Need a machine-readable plan for CI or GitOps checks?
 chainform plan -f protocol.hcl --json
 ```
 
-Example CI gate (fail if any operations are proposed):
+Example CI gate (fail if any drift is detected — `plan` exits 1 when operations
+are proposed or an `expect` assertion fails):
+
+```bash
+chainform plan -f protocol.hcl --mock
+```
+
+For machine-readable inspection (e.g. to print drift details in CI logs):
 
 ```bash
 chainform plan -f protocol.hcl --json | jq -e '.summary.operationCount == 0'
@@ -167,10 +175,10 @@ a copy-pasteable, offline end-to-end example.
 ## Commands
 
 ```bash
-chainform validate   # check a config without contacting the chain
+chainform validate   # check config schema and resource definitions (no RPC)
 chainform import     # generate a config from a live contract
 chainform show       # print actual on-chain state, without diffing
-chainform plan       # detect drift and print the reconciliation plan
+chainform plan       # detect drift and print the reconciliation plan (exit 1 on drift)
 chainform plan --json # emit a machine-readable JSON plan (CI/GitOps friendly)
 chainform export     # export the plan as a Safe transaction batch
 chainform version    # print the version
@@ -226,8 +234,8 @@ A more accurate analogy is:
 ### Future
 
 - Governance simulation
-- GitOps workflows
-- Drift monitoring
+- Scheduled drift detection (daemon / watch mode)
+- GitOps PR integration (post plan on pull requests)
 - Hosted control plane
 
 ## FAQ

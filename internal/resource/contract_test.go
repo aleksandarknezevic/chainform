@@ -69,13 +69,17 @@ func TestContractDetectsDrift(t *testing.T) {
 	}{
 		{"setFeeBps", "uint256"},
 		{"setOwner", "address"},
-		{"setPaused", "bool"},
+		{"unpause", ""},
 	}
 	for i, w := range want {
 		if ops[i].Method != w.method {
 			t.Errorf("op[%d].Method = %q, want %q", i, ops[i].Method, w.method)
 		}
-		if len(ops[i].Inputs) != 1 || ops[i].Inputs[0] != w.input {
+		if w.input == "" {
+			if len(ops[i].Inputs) != 0 {
+				t.Errorf("op[%d].Inputs = %v, want none", i, ops[i].Inputs)
+			}
+		} else if len(ops[i].Inputs) != 1 || ops[i].Inputs[0] != w.input {
 			t.Errorf("op[%d].Inputs = %v, want [%s]", i, ops[i].Inputs, w.input)
 		}
 		// Every operation must encode cleanly with the produced argument types;
@@ -83,6 +87,28 @@ func TestContractDetectsDrift(t *testing.T) {
 		if _, err := chain.Pack(ops[i].Method, ops[i].Inputs, ops[i].Args...); err != nil {
 			t.Errorf("op[%d] Pack: %v", i, err)
 		}
+	}
+}
+
+func TestContractPausedUsesPause(t *testing.T) {
+	res, err := resource.Build(contractConfig(map[string]any{"paused": true}))
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	cur, err := res.Refresh(context.Background(), chain.NewMockReader().
+		Set(common.HexToAddress(contractAddr), "paused", false))
+	if err != nil {
+		t.Fatalf("Refresh: %v", err)
+	}
+	ops, err := res.Plan(cur)
+	if err != nil {
+		t.Fatalf("Plan: %v", err)
+	}
+	if len(ops) != 1 {
+		t.Fatalf("got %d operations, want 1", len(ops))
+	}
+	if ops[0].Method != "pause" {
+		t.Errorf("method = %q, want pause", ops[0].Method)
 	}
 }
 

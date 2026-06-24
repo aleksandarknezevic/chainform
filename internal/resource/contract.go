@@ -33,6 +33,7 @@ type contractResource struct {
 	desired map[string]any         // attribute name -> canonical desired value
 	expects map[string]expectAttr  // read-only assertion -> getter + expected
 	getters []abi.Getter           // all readable getters, for `show` (sorted)
+	toggles map[string]abi.TogglePair // bool getter -> pause/unpause-style pair
 }
 
 // managedAttr couples an ABI-derived attribute with its parsed type, kept so
@@ -83,6 +84,7 @@ func newContract(cfg config.ResourceConfig) (Resource, error) {
 		desired: make(map[string]any),
 		expects: make(map[string]expectAttr),
 		getters: getters,
+		toggles: abi.BoolTogglePairs(parsed),
 	}
 
 	for k, v := range cfg.Spec {
@@ -202,6 +204,12 @@ func (c *contractResource) Plan(current State) ([]Operation, error) {
 		if valueEqual(current[name], want) {
 			continue
 		}
+		if op, ok, err := c.planBoolToggle(name, current[name], want); err != nil {
+			return nil, fmt.Errorf("%s: %w", name, err)
+		} else if ok {
+			ops = append(ops, op)
+			continue
+		}
 		arg, err := setterArg(a.typ, want)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", name, err)
@@ -217,6 +225,37 @@ func (c *contractResource) Plan(current State) ([]Operation, error) {
 		})
 	}
 	return ops, nil
+}
+
+// planBoolToggle emits a zero-arg pause/unpause-style operation when the ABI
+// exposes a toggle pair for this bool attribute. Returns ok=false to fall back
+// to the conventional setX(bool) setter.
+func (c *contractResource) planBoolToggle(name string, current, want any) (Operation, bool, error) {
+	pair, ok := c.toggles[name]
+	if !ok {
+		return Operation{}, false, nil
+	}
+	cur, ok := current.(bool)
+	if !ok {
+		return Operation{}, false, fmt.Errorf("expected bool current value, got %T", current)
+	}
+	desired, ok := want.(bool)
+	if !ok {
+		return Operation{}, false, fmt.Errorf("expected bool desired value, got %T", want)
+	}
+	method := pair.Off
+	if desired {
+		method = pair.On
+	}
+	return Operation{
+		Resource: c.name,
+		To:       c.address,
+		Method:   method,
+		Inputs:   []string{},
+		Args:     nil,
+		Value:    big.NewInt(0),
+		Reason:   fmt.Sprintf("%s: %v -> %v", name, cur, desired),
+	}, true, nil
 }
 
 // Inspect reads every getter derived from the ABI and reports its value,

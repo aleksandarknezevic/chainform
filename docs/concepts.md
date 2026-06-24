@@ -34,7 +34,9 @@ Resources implement the [`resource.Resource`](../internal/resource/resource.go)
 interface. Two types ship today: `protocol`, a hand-written reference type
 (manages `feeBps` and `paused`) that demonstrates the contract end to end; and
 `contract`, an ABI-driven type that derives its getters and setters from a
-loaded ABI so arbitrary contracts can be managed without writing Go.
+loaded ABI so arbitrary contracts can be managed without writing Go. For bool
+`paused`, the `contract` resource prefers `pause()`/`unpause()` when the ABI
+exposes them (OpenZeppelin Pausable); otherwise it falls back to `setPaused(bool)`.
 
 ## Operation
 

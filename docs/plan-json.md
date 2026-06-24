@@ -61,11 +61,19 @@ Notes on canonical encoding:
 - `operationCount` (`number`): length of `operations`.
 - `assertionCount` (`number`): total read-only assertions evaluated.
 - `failedAssertionCount` (`number`): number of unsatisfied assertions.
-- `empty` (`boolean`): `true` only when `operationCount == 0`.
+- `empty` (`boolean`): `true` only when `operationCount == 0`. Failed
+  `expect` assertions do not affect this field; use `failedAssertionCount` or
+  the `plan` process exit code (1 when any drift is present).
 
 ## CI examples
 
-Fail when any operation is proposed:
+Fail when any drift is detected (`plan` exits 1):
+
+```bash
+chainform plan -f chainform.hcl
+```
+
+Fail when any operation is proposed (JSON inspection):
 
 ```bash
 chainform plan -f chainform.hcl --json | jq -e '.summary.operationCount == 0'
@@ -75,4 +83,10 @@ Fail when any read-only expectation is violated:
 
 ```bash
 chainform plan -f chainform.hcl --json | jq -e '.summary.failedAssertionCount == 0'
+```
+
+Or rely on the process exit code (covers both operations and failed assertions):
+
+```bash
+chainform plan -f chainform.hcl
 ```

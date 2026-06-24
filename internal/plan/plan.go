@@ -29,6 +29,20 @@ type Plan struct {
 // Empty reports whether there is no drift (no operations required).
 func (p *Plan) Empty() bool { return len(p.Operations) == 0 }
 
+// HasDrift reports whether any managed attribute drifted or any read-only
+// expectation failed.
+func (p *Plan) HasDrift() bool {
+	if !p.Empty() {
+		return true
+	}
+	for _, a := range p.Assertions {
+		if !a.Satisfied() {
+			return true
+		}
+	}
+	return false
+}
+
 // failedAssertions returns the assertions whose on-chain value does not match
 // the expected value.
 func (p *Plan) failedAssertions() []resource.Assertion {
