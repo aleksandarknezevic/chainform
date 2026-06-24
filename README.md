@@ -1,9 +1,9 @@
 # ChainForm
 
-[![Tests](https://github.com/ja/chainform/actions/workflows/test.yml/badge.svg)](https://github.com/ja/chainform/actions/workflows/test.yml)
-[![Release](https://img.shields.io/github/v/release/ja/chainform)](https://github.com/ja/chainform/releases)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/ja/chainform)](https://github.com/ja/chainform/blob/main/go.mod)
-[![License](https://img.shields.io/github/license/ja/chainform)](https://github.com/ja/chainform/blob/main/LICENSE)
+[![Tests](https://github.com/aleksandarknezevic/chainform/actions/workflows/test.yml/badge.svg)](https://github.com/aleksandarknezevic/chainform/actions/workflows/test.yml)
+[![Release](https://img.shields.io/github/v/release/aleksandarknezevic/chainform)](https://github.com/aleksandarknezevic/chainform/releases)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/aleksandarknezevic/chainform)](https://github.com/aleksandarknezevic/chainform/blob/main/go.mod)
+[![License](https://img.shields.io/github/license/aleksandarknezevic/chainform)](https://github.com/aleksandarknezevic/chainform/blob/main/LICENSE)
 
 **Infrastructure as Code and Configuration Management for Blockchain Protocols**
 
