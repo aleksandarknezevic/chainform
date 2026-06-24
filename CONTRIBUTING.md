@@ -74,4 +74,5 @@ behaviour change and include test output where relevant.
 ## Community
 
 - [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security policy](.github/SECURITY.md) — report vulnerabilities privately
 - [Open an issue](https://github.com/aleksandarknezevic/chainform/issues/new/choose)
