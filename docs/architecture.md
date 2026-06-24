@@ -72,5 +72,5 @@ sends a transaction — execution is intentionally a separate, explicit step
   [`internal/chain/abi.go`](../internal/chain/abi.go), so resources describe
   calls by name + types and never touch keccak or padding.
 
-See [concepts.md](concepts.md) for the vocabulary and [roadmap.md](roadmap.md)
-for where this is heading.
+See [concepts.md](concepts.md) for the vocabulary, [mainnet-example.md](mainnet-example.md)
+for a live Ethereum walkthrough, and [roadmap.md](roadmap.md) for where this is heading.

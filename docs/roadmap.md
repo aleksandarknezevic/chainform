@@ -36,11 +36,10 @@ are roughly ordered and mapped to where they land in the codebase.
 The fastest path to real users is reducing time-to-first-value, not more
 features. These are ordered so each unlocks the next.
 
-- [ ] **Real, copy-paste example against mainnet.** A read-only `contract` +
-      `expect` config for a well-known protocol (e.g. Lido / AAVE): fee
-      parameters, oracle values, paused flags. Goal: anyone with an RPC URL
-      sees value in under 5 minutes — no mock, no hand-written ABI. Ships as
-      a runnable file under `examples/` plus its ABI in `testdata/`.
+- [x] **Real, copy-paste example against mainnet.** Read-only `contract` +
+      `expect` config for Lido stETH (fee, emergency stop) and Chainlink ETH/USD
+      (oracle metadata) on Ethereum mainnet — [`examples/mainnet.hcl`](../examples/mainnet.hcl),
+      ABIs in `testdata/`, walkthrough in [mainnet-example.md](mainnet-example.md).
 - [ ] **Golden-path doc.** A single end-to-end walkthrough on one well-known
       protocol: `import → edit → plan → export → Safe`, linking the real
       contract on a block explorer. Builds directly on the example above so the

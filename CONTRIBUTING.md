@@ -13,6 +13,7 @@ make test       # run all tests
 make vet        # go vet
 make fmt        # gofmt -w .
 make run-plan   # plan against examples/protocol.hcl with the offline demo reader
+make run-mainnet-show  # show Lido + Chainlink on mainnet (needs RPC_URL)
 ```
 
 ## Try it offline
@@ -26,6 +27,17 @@ supplies intentionally-drifted state:
 ```
 
 Drop `--mock` and set `RPC_URL` to run against a live network.
+
+## Try mainnet
+
+Read-only monitoring of Lido stETH and Chainlink ETH/USD on Ethereum mainnet:
+
+```bash
+export RPC_URL=https://your-mainnet-rpc.example
+make run-mainnet-show   # or: make run-mainnet-plan
+```
+
+Full guide: [docs/mainnet-example.md](docs/mainnet-example.md).
 
 ## Docker
 

@@ -1,8 +1,13 @@
 # Walkthrough: import → plan → export
 
-This is the full loop end to end, entirely offline. Every command below uses
-`--mock` (a built-in demo reader) so you can follow along without an RPC
-endpoint or a real contract. Drop `--mock` and set `RPC_URL` to run it for real.
+This is the full **managed-reconciliation** loop end to end, entirely offline.
+Every command below uses `--mock` (a built-in demo reader) so you can follow
+along without an RPC endpoint or a real contract.
+
+For **live mainnet** read-only monitoring (Lido + Chainlink, no `--mock`), see
+**[mainnet-example.md](mainnet-example.md)**.
+
+Drop `--mock` and set `RPC_URL` to run it for real.
 
 Build the binary first:
 

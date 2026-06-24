@@ -120,8 +120,13 @@ untouched.
 
 A `contract` with no managed attributes is valid — it is read-only and
 produces no operations, but `chainform show` still prints every getter derived
-from its ABI. [`examples/feed.hcl`](../examples/feed.hcl) does exactly this for
-the live Chainlink ETH/USD price feed on Sepolia.
+from its ABI.
+
+Examples:
+
+- [`examples/feed.hcl`](../examples/feed.hcl) — Chainlink ETH/USD on Sepolia (testnet)
+- [`examples/mainnet.hcl`](../examples/mainnet.hcl) — Lido stETH + Chainlink ETH/USD on
+  Ethereum mainnet; full walkthrough in [mainnet-example.md](mainnet-example.md)
 
 #### `expect` block — read-only assertions
 

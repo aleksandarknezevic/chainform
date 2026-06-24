@@ -14,6 +14,20 @@ go install github.com/aleksandarknezevic/chainform/cmd/chainform@latest
 Or use a [release binary](https://github.com/aleksandarknezevic/chainform/releases) / the
 [Docker image](#docker) published on each tag.
 
+## Try on mainnet (5 minutes)
+
+Monitor real Lido and Chainlink contracts on Ethereum mainnet — no `--mock`:
+
+```bash
+export RPC_URL=https://your-mainnet-rpc.example   # or: cp .env.example .env
+chainform validate -f examples/mainnet.hcl
+chainform show   -f examples/mainnet.hcl
+chainform plan   -f examples/mainnet.hcl            # exit 0 when invariants hold
+```
+
+See **[Mainnet example](docs/mainnet-example.md)** for field-by-field explanation,
+Docker usage, and how to adapt the pattern to your own contracts.
+
 ## Infrastructure as Code and Configuration Management for Blockchain Protocols
 
 ChainForm is a declarative configuration management tool for blockchain protocols.
@@ -144,13 +158,21 @@ Export the operations as a Safe transaction batch for multisig execution:
 chainform export -f protocol.hcl -o batch.json
 ```
 
-No RPC endpoint needed to try it — add `--mock` to use a built-in demo reader.
+No RPC endpoint needed to try managed reconciliation — add `--mock` to use a
+built-in demo reader. For **live mainnet** read-only monitoring (Lido + Chainlink),
+see **[Mainnet example](docs/mainnet-example.md)**.
+
 The repo ships runnable examples:
 
 ```bash
+# Offline demo (managed drift + Safe export)
 chainform plan -f examples/protocol.hcl --mock
 chainform plan -f examples/protocol.json --mock
-chainform show -f examples/feed.hcl     --mock   # read-only Chainlink ETH/USD feed
+chainform show -f examples/feed.hcl     --mock   # Chainlink ETH/USD on Sepolia
+
+# Live Ethereum mainnet (read-only expect blocks; needs RPC_URL)
+chainform show -f examples/mainnet.hcl
+chainform plan -f examples/mainnet.hcl
 ```
 
 Validate both formats the same way:
@@ -178,8 +200,11 @@ An immediate `plan` against the freshly imported config reports no drift, so you
 can adopt ChainForm gradually without rebuilding existing operational workflows.
 Add `--mock` to try it offline.
 
-👉 See the full **[import → plan → export walkthrough](docs/walkthrough.md)** —
-a copy-pasteable, offline end-to-end example.
+👉 **Live mainnet (5 min):** **[Lido + Chainlink example](docs/mainnet-example.md)** —
+read-only `expect` blocks against production contracts.
+
+👉 **Offline end-to-end:** **[import → plan → export walkthrough](docs/walkthrough.md)** —
+managed attributes, Safe export, `--mock`.
 
 ## Commands
 
