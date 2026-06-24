@@ -15,10 +15,11 @@ import (
 func NewRootCmd(version string) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "chainform",
-		Short: "Infrastructure as Code for blockchain protocols",
-		Long: "ChainForm manages on-chain protocol state the way Terraform manages cloud\n" +
-			"infrastructure: declare desired state in configuration, read actual state\n" +
-			"from the chain, detect drift, and generate reviewable operations.",
+		Short: "Compare on-chain config to declared state; plan drift (no tx execution)",
+		Long: "ChainForm is a CLI for declarative on-chain configuration.\n" +
+			"Declare desired state, read actual state from the chain, detect drift,\n" +
+			"and export reviewable operations (e.g. a Safe batch). It does not sign\n" +
+			"or send transactions.",
 		SilenceUsage:  true,
 		SilenceErrors: false,
 	}

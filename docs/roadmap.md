@@ -1,8 +1,11 @@
 # Roadmap
 
-This boilerplate implements the read-only half of the loop end to end:
-desired-state config → drift detection → plan → Safe export. The items below
-are roughly ordered and mapped to where they land in the codebase.
+ChainForm today is a **CLI for read → plan → export**. It does not apply
+transactions, run governance, or host a control plane. The sections below
+separate what ships now from what is planned.
+
+This repo implements the read-only half of the loop end to end:
+desired-state config → drift detection → plan → Safe export.
 
 ## Now (implemented)
 

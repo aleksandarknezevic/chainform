@@ -1,7 +1,8 @@
 # Concepts
 
 ChainForm's vocabulary maps closely onto Terraform and Kubernetes. If you know
-either, this will feel familiar.
+either, this will feel familiar. For what is implemented today versus planned,
+see the [README](../README.md#what-works-today) and [roadmap](roadmap.md).
 
 ## Desired state
 

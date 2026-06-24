@@ -5,99 +5,99 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/aleksandarknezevic/chainform)](https://github.com/aleksandarknezevic/chainform/blob/main/go.mod)
 [![License](https://img.shields.io/github/license/aleksandarknezevic/chainform)](https://github.com/aleksandarknezevic/chainform/blob/main/LICENSE)
 
-Install the CLI from source:
+**ChainForm is an early-stage CLI** that compares declared on-chain configuration
+(HCL/JSON) against live contract state, reports drift, and encodes the resulting
+calls as reviewable operations. **It does not execute transactions** — you review
+the plan and run it through your existing multisig or governance flow.
+
+Install:
 
 ```bash
 go install github.com/aleksandarknezevic/chainform/cmd/chainform@latest
 ```
 
-Or use a [release binary](https://github.com/aleksandarknezevic/chainform/releases) / the
-[Docker image](#docker) published on each tag.
+Or use a [release binary](https://github.com/aleksandarknezevic/chainform/releases) /
+the [Docker image](#docker).
 
-## Try on mainnet (5 minutes)
+## What works today
 
-Monitor real Lido and Chainlink contracts on Ethereum mainnet — no `--mock`:
+| Capability | Status |
+| --- | --- |
+| Declarative config (HCL + JSON), one EVM chain per file | **Yes** |
+| `validate` — schema + resource/ABI checks (no RPC) | **Yes** |
+| `show` — read on-chain state (`eth_call`) | **Yes** |
+| `plan` — drift detection, human + `--json` output, exit 1 on drift | **Yes** |
+| `import` — snapshot a contract into config (getter/setter + `expect`) | **Yes** |
+| `export` — Safe Transaction Builder JSON batch (import manually in Safe app) | **Yes** |
+| ABI-driven `contract` resource (`X()` / `setX`, `pause`/`unpause`) | **Yes** |
+| Read-only monitoring via `expect` blocks | **Yes** |
+| Mainnet example (Lido + Chainlink) | **Yes** — [docs/mainnet-example.md](docs/mainnet-example.md) |
+| Offline demo (`--mock`) | **Yes** |
+
+**Supported today:** simple scalar types (bool, string, address, integers),
+single-argument setters following `setX` naming (plus `pause`/`unpause` for
+`paused`), one chain per config, manual `chainform plan` runs.
+
+## What is not built yet
+
+Do not expect these today — they are on the [roadmap](docs/roadmap.md):
+
+| Capability | Status |
+| --- | --- |
+| Execute / apply plans (sign and send txs) | **No** — plan and export only |
+| AccessControl / `grantRole` resources | **No** |
+| Proxy / upgrade admin resources | **No** |
+| Governance proposal export (Tally, OZ Governor, …) | **No** — Safe batch JSON only |
+| Multi-chain in one config | **No** |
+| Continuous or scheduled drift monitoring | **No** — run `plan` yourself (cron/K8s works) |
+| GitHub App / PR plan comments | **No** — use `plan` exit code or `--json` in your CI |
+| Hosted control plane / SaaS | **No** |
+| Complex ABI types (structs, arrays, enums) | **Limited** — scalars only |
+
+ChainForm is **not** a governance platform, wallet, deployment tool, or block
+explorer. It does **not** hold private keys.
+
+## Try it
+
+**Mainnet (read-only, ~5 min)** — needs `RPC_URL`:
 
 ```bash
-export RPC_URL=https://your-mainnet-rpc.example   # or: cp .env.example .env
+export RPC_URL=https://your-mainnet-rpc.example
 chainform validate -f examples/mainnet.hcl
 chainform show   -f examples/mainnet.hcl
-chainform plan   -f examples/mainnet.hcl            # exit 0 when invariants hold
+chainform plan   -f examples/mainnet.hcl
 ```
 
-See **[Mainnet example](docs/mainnet-example.md)** for field-by-field explanation,
-Docker usage, and how to adapt the pattern to your own contracts.
+**Offline (managed drift + Safe export)** — no RPC:
 
-## Infrastructure as Code and Configuration Management for Blockchain Protocols
+```bash
+chainform plan   -f examples/protocol.hcl --mock
+chainform export -f examples/protocol.hcl --mock -o batch.json
+```
 
-ChainForm is a declarative configuration management tool for blockchain protocols.
+See [mainnet-example.md](docs/mainnet-example.md) and the offline
+[walkthrough](docs/walkthrough.md).
 
-It helps protocol teams manage smart contract configuration, governance parameters, access control, treasury settings, and protocol operations using workflows inspired by Terraform, Kubernetes reconciliation loops, and GitOps.
+## The problem (and the direction)
 
-Instead of manually executing governance transactions, multisig actions, and operational scripts, teams define the desired protocol state and let ChainForm generate reviewable reconciliation plans.
+Protocol teams still coordinate parameter changes through scripts, multisig
+queues, governance votes, and spreadsheets. That makes drift hard to see and
+changes hard to review.
 
-## Why ChainForm?
+ChainForm's **current** loop is intentionally narrow:
 
-Most protocol configuration today is managed through:
+```
+config → plan (read chain, diff) → review → export to Safe batch → humans execute
+```
 
-- ad hoc scripts
-- multisig transactions
-- governance proposals
-- spreadsheets
-- internal documentation
+The longer-term direction is GitOps-style protocol ops (PR checks, richer
+resources, optional apply) — see [roadmap](docs/roadmap.md). Today you get the
+**read and plan** half of that loop, not the full ArgoCD-style control plane.
 
-This creates several problems:
+## How it works
 
-- no single source of truth
-- difficult audits
-- manual protocol operations
-- configuration drift
-- inconsistent settings across deployments
-- poor change visibility
-
-ChainForm compares desired state with actual on-chain state at plan time,
-detects drift, and generates the minimal set of operations required to reconcile them.
-
-## Features
-
-- Infrastructure as Code for blockchain protocols
-- Declarative protocol configuration
-- Smart contract state reconciliation
-- Configuration drift detection
-- Governance transaction planning
-- Safe transaction export
-- Existing protocol import
-- Reviewable execution plans
-- GitOps-compatible workflows
-- Multi-contract configuration management
-
-## Who Is ChainForm For?
-
-ChainForm is designed for:
-
-- DeFi protocol teams
-- DAO operators
-- Protocol engineers
-- Smart contract platform teams
-- Governance contributors
-- Multisig operators
-- Blockchain DevOps teams
-
-Typical use cases include:
-
-- protocol parameter management
-- fee configuration
-- treasury administration
-- role management
-- access control management
-- timelock administration
-- multisig governance operations
-- protocol upgrades
-
-## How It Works
-
-Define the desired state in HCL or JSON. Attribute names mirror the contract's
-functions — `feeBps` is read via `feeBps()` and reconciled via `setFeeBps()`:
+Declare desired state. Attribute names mirror contract getters/setters — e.g.
+`feeBps` is read via `feeBps()` and reconciled via `setFeeBps()` when drifted:
 
 ```hcl
 resource "protocol" "main" {
@@ -107,41 +107,14 @@ resource "protocol" "main" {
 }
 ```
 
-Inspect the current on-chain state (no diff):
-
 ```bash
-chainform show -f protocol.hcl
+chainform show -f protocol.hcl          # actual state, no diff
+chainform plan -f protocol.hcl          # drift → operations (exit 1 if drift)
+chainform plan -f protocol.hcl --json   # machine-readable plan
+chainform export -f protocol.hcl -o batch.json   # Safe Transaction Builder JSON
 ```
 
-Generate a reconciliation plan — the drift between desired and actual state:
-
-```bash
-chainform plan -f protocol.hcl
-```
-
-Need a machine-readable plan for CI or GitOps checks?
-
-```bash
-chainform plan -f protocol.hcl --json
-```
-
-Example CI gate (fail if any drift is detected — `plan` exits 1 when operations
-are proposed or an `expect` assertion fails):
-
-```bash
-chainform plan -f protocol.hcl --mock
-```
-
-For machine-readable inspection (e.g. to print drift details in CI logs):
-
-```bash
-chainform plan -f protocol.hcl --json | jq -e '.summary.operationCount == 0'
-```
-
-JSON field-by-field reference is documented in
-**[Plan JSON format](docs/plan-json.md)**.
-
-Example output:
+Example plan output:
 
 ```
 Plan: 2 operation(s)
@@ -152,43 +125,17 @@ Plan: 2 operation(s)
        drift: paused: true -> false
 ```
 
-Export the operations as a Safe transaction batch for multisig execution:
+CI gate (fails when drift is detected):
 
 ```bash
-chainform export -f protocol.hcl -o batch.json
+chainform plan -f protocol.hcl --mock
 ```
 
-No RPC endpoint needed to try managed reconciliation — add `--mock` to use a
-built-in demo reader. For **live mainnet** read-only monitoring (Lido + Chainlink),
-see **[Mainnet example](docs/mainnet-example.md)**.
+JSON reference: [docs/plan-json.md](docs/plan-json.md).
 
-The repo ships runnable examples:
+### Import an existing contract
 
-```bash
-# Offline demo (managed drift + Safe export)
-chainform plan -f examples/protocol.hcl --mock
-chainform plan -f examples/protocol.json --mock
-chainform show -f examples/feed.hcl     --mock   # Chainlink ETH/USD on Sepolia
-
-# Live Ethereum mainnet (read-only expect blocks; needs RPC_URL)
-chainform show -f examples/mainnet.hcl
-chainform plan -f examples/mainnet.hcl
-```
-
-Validate both formats the same way:
-
-```bash
-chainform validate -f examples/protocol.hcl
-chainform validate -f examples/protocol.json
-```
-
-## Import Existing Protocols
-
-Most protocols already exist on-chain.
-
-ChainForm can import an existing contract and generate an initial desired-state
-definition from its current on-chain values — managed attributes plus read-only
-`expect` assertions:
+Bootstrap config from live state (managed attrs + read-only `expect`):
 
 ```bash
 chainform import \
@@ -196,32 +143,38 @@ chainform import \
   --abi protocol.abi.json --name main --chain-id 1 -o protocol.hcl
 ```
 
-An immediate `plan` against the freshly imported config reports no drift, so you
-can adopt ChainForm gradually without rebuilding existing operational workflows.
-Add `--mock` to try it offline.
-
-👉 **Live mainnet (5 min):** **[Lido + Chainlink example](docs/mainnet-example.md)** —
-read-only `expect` blocks against production contracts.
-
-👉 **Offline end-to-end:** **[import → plan → export walkthrough](docs/walkthrough.md)** —
-managed attributes, Safe export, `--mock`.
+A plan against the imported snapshot should report no drift until you change
+desired values. `import` reads every ABI getter — large contracts may need
+care; see roadmap for selective import.
 
 ## Commands
 
 ```bash
-chainform validate   # check config schema and resource definitions (no RPC)
-chainform import     # generate a config from a live contract
-chainform show       # print actual on-chain state, without diffing
-chainform plan       # detect drift and print the reconciliation plan (exit 1 on drift)
-chainform plan --json # emit a machine-readable JSON plan (CI/GitOps friendly)
-chainform export     # export the plan as a Safe transaction batch
-chainform version    # print the version
+chainform validate    # config + resources, no RPC
+chainform import      # snapshot live contract → HCL
+chainform show        # on-chain state, no diff
+chainform plan        # drift + operations (exit 1 on drift)
+chainform plan --json
+chainform export      # Safe Transaction Builder batch JSON
+chainform version
 ```
 
-## Docker
+## Who is this for (today)
 
-Each release publishes a multi-arch image (`linux/amd64`, `linux/arm64`) to GitHub
-Container Registry:
+Best fit **right now**:
+
+- Engineers who want **config-as-code** for a few contracts with simple
+  `getter` / `setX` (or `pause`/`unpause`) pairs
+- Multisig operators who want a **reviewable calldata batch** before signing in
+  Safe
+- Teams experimenting with **drift checks** in CI (`plan` exit code) or
+  **read-only invariants** (`expect`) on mainnet
+
+**Not a fit yet** if you need role graphs, proxy upgrades, governor proposals,
+automatic execution, or multi-chain reconciliation — track
+[roadmap](docs/roadmap.md) instead.
+
+## Docker
 
 ```bash
 docker run --rm -v "$(pwd):/work" -w /work \
@@ -229,92 +182,42 @@ docker run --rm -v "$(pwd):/work" -w /work \
   plan -f examples/protocol.hcl --mock
 ```
 
-Mount the directory that contains your config (and any relative ABI paths). For
-live networks, pass `-e RPC_URL=...` and drop `--mock`. Pin a release tag instead
-of `latest` in production (for example `ghcr.io/aleksandarknezevic/chainform:v0.1.0`).
+Multi-arch (`linux/amd64`, `linux/arm64`) on each release. Pin a version tag in
+production; pass `-e RPC_URL=...` for live runs.
 
-## Why Not Scripts?
+## Roadmap
 
-Scripts can change state.
+Full detail: **[docs/roadmap.md](docs/roadmap.md)**.
 
-Scripts do not tell you:
+**Next up:** golden-path doc on a real protocol, reusable GitHub Action for
+`plan`, richer ABI types.
 
-- what changed
-- what drifted
-- whether actual state matches expectations
-- what still requires reconciliation
-
-ChainForm focuses on reconciling desired and actual protocol state at plan time.
-
-## Is ChainForm Terraform for Blockchain?
-
-Partially.
-
-Terraform focuses on provisioning infrastructure.
-
-ChainForm focuses on managing and reconciling protocol configuration after deployment.
-
-A more accurate analogy is:
-
-- Terraform + Kubernetes reconciliation
-- GitOps for blockchain protocols
-- Configuration management for smart contracts
-
-## Current Roadmap
-
-### Current
-
-- Declarative protocol definitions
-- ABI-driven contract resources (auto-derived getters/setters)
-- State inspection (`show`)
-- Reconciliation planning + drift detection
-- Read-only assertions (`expect`)
-- Safe transaction export
-- Protocol import
-
-### Next
-
-- Richer attribute types (addresses, arrays, structs, enums)
-- AccessControl resources
-- Proxy resources
-- Apply engine (explicit execution step, separate from planning)
-- Multi-chain reconciliation
-
-### Future
-
-- Governance simulation
-- Scheduled drift detection (daemon / watch mode)
-- GitOps PR integration (post plan on pull requests)
-- Hosted control plane
+**Later:** apply engine, AccessControl/proxy resources, governance export targets,
+multi-chain, scheduled monitoring, GitOps PR integration.
 
 ## FAQ
 
 ### Does ChainForm deploy contracts?
 
-No.
+No. It manages configuration of contracts that are already deployed.
 
-ChainForm manages protocol state after deployment.
+### Does ChainForm send transactions?
 
-### Does ChainForm manage private keys?
+No. `plan` and `export` are read-only with respect to the chain. Execution is
+manual (e.g. import the Safe batch and sign).
 
-No.
+### Does ChainForm replace Safe or governance tools?
 
-ChainForm integrates with existing signing and governance systems.
+No. It produces calldata batches and plans for humans to execute in existing
+workflows.
 
-### Does ChainForm replace Safe?
+### Is this production-ready?
 
-No.
+It is early software with a focused feature set (see tables above). Use it where
+the current scope matches your contracts; verify plans before any mainnet
+execution.
 
-ChainForm generates operations that can be executed through Safe.
+### Can I adopt it incrementally?
 
-### Is ChainForm a governance platform?
-
-No.
-
-ChainForm focuses on protocol configuration management and transaction planning.
-
-### Can ChainForm be adopted incrementally?
-
-Yes.
-
-Existing protocols can be imported and managed gradually without changing governance processes.
+Yes. `import` captures current state; `plan` shows only declared attributes;
+`expect` adds monitoring without write paths.
