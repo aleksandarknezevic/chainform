@@ -1,0 +1,57 @@
+name: Feature request
+description: Suggest an idea or improvement
+title: "[feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem first, then the change you want. Links to docs or other tools are welcome.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What pain point does this solve? Who is it for (protocol team, DAO ops, CI, etc.)?
+      placeholder: Today we have to ... ChainForm could ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What should ChainForm do? CLI flag, resource type, export format, docs, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches, workarounds, or tools you looked at.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - CLI / UX
+        - contract resource / ABI
+        - plan / drift detection
+        - import / export (Safe, etc.)
+        - CI / GitOps
+        - Documentation / examples
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: willing
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to open a PR for this (optional)

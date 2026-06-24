@@ -1,0 +1,27 @@
+name: Documentation
+description: Missing, unclear, or incorrect docs
+title: "[docs]: "
+labels:
+  - documentation
+body:
+  - type: textarea
+    id: page
+    attributes:
+      label: Which doc or page?
+      description: File path, README section, or URL.
+      placeholder: docs/mainnet-example.md, README, ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is wrong or missing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: What should the reader see instead?

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/aleksandarknezevic/chainform/blob/main/CONTRIBUTING.md
+    about: Build, test, and PR conventions
+  - name: Documentation
+    url: https://github.com/aleksandarknezevic/chainform/tree/main/docs
+    about: Configuration reference, walkthroughs, and architecture

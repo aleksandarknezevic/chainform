@@ -1,5 +1,9 @@
 # Contributing
 
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
+Use the [issue templates](.github/ISSUE_TEMPLATE/) when reporting bugs or
+requesting features.
+
 ## Prerequisites
 
 - Go 1.23+ (developed against 1.26)
@@ -66,3 +70,8 @@ documented in [docs/adding-a-resource.md](docs/adding-a-resource.md).
 
 Small, focused commits with imperative subjects. PRs should describe the
 behaviour change and include test output where relevant.
+
+## Community
+
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Open an issue](https://github.com/aleksandarknezevic/chainform/issues/new/choose)

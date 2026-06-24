@@ -1,0 +1,94 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly
+title: "[bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please redact RPC URLs, API keys, and private contract details.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you see? Include error messages verbatim if possible.
+      placeholder: chainform plan failed with ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      placeholder: plan should exit 0 with no operations
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Command(s), config file, and flags (`--mock` vs live RPC).
+      placeholder: |
+        chainform version: ...
+        chainform plan -f examples/mainnet.hcl
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: ChainForm version
+      description: Output of `chainform version`
+      placeholder: v0.0.2 or dev build
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options:
+        - macOS
+        - Linux
+        - Windows
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install ChainForm?
+      options:
+        - go install
+        - Release binary
+        - Docker image (ghcr.io)
+        - Built from source (make build)
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: mock
+    attributes:
+      label: Runtime
+      options:
+        - label: I used `--mock` (offline demo reader)
+        - label: I used a live JSON-RPC endpoint (`RPC_URL` / `chain.rpc`)
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration (optional)
+      description: Minimal HCL/JSON snippet or path under `examples/`. Redact secrets.
+      render: hcl
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Logs, `--json` plan output, chain id, contract address, etc.
