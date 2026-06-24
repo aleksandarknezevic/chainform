@@ -1,5 +1,10 @@
 # ChainForm
 
+[![Tests](https://github.com/ja/chainform/actions/workflows/test.yml/badge.svg)](https://github.com/ja/chainform/actions/workflows/test.yml)
+[![Release](https://img.shields.io/github/v/release/ja/chainform)](https://github.com/ja/chainform/releases)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/ja/chainform)](https://github.com/ja/chainform/blob/main/go.mod)
+[![License](https://img.shields.io/github/license/ja/chainform)](https://github.com/ja/chainform/blob/main/LICENSE)
+
 **Infrastructure as Code and Configuration Management for Blockchain Protocols**
 
 ChainForm is a declarative configuration management tool for blockchain protocols.
