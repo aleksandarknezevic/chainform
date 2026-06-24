@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -128,6 +129,8 @@ func parseJSON(raw []byte, filename string) (*Config, error) {
 	}
 	if err := dec.Decode(&struct{}{}); err == nil {
 		return nil, fmt.Errorf("parse %s: unexpected trailing JSON content", filename)
+	} else if err != io.EOF {
+		return nil, fmt.Errorf("parse %s: %w", filename, err)
 	}
 
 	root, err := decodeJSONRoot(top)

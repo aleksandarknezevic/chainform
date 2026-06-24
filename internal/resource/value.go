@@ -86,32 +86,84 @@ func setterArg(t ethabi.Type, canonicalVal any) (any, error) {
 		if t.T == ethabi.UintTy {
 			switch t.Size {
 			case 8:
-				return uint8(n.Uint64()), nil
+				u, err := asUintN(n, 8)
+				if err != nil {
+					return nil, err
+				}
+				return uint8(u), nil
 			case 16:
-				return uint16(n.Uint64()), nil
+				u, err := asUintN(n, 16)
+				if err != nil {
+					return nil, err
+				}
+				return uint16(u), nil
 			case 32:
-				return uint32(n.Uint64()), nil
+				u, err := asUintN(n, 32)
+				if err != nil {
+					return nil, err
+				}
+				return uint32(u), nil
 			case 64:
-				return n.Uint64(), nil
+				u, err := asUintN(n, 64)
+				if err != nil {
+					return nil, err
+				}
+				return u, nil
 			default:
+				if n.Sign() < 0 {
+					return nil, fmt.Errorf("%s out of range: %s", t.String(), n.String())
+				}
 				return n, nil
 			}
 		}
 		switch t.Size {
 		case 8:
-			return int8(n.Int64()), nil
+			i, err := asIntN(n, 8)
+			if err != nil {
+				return nil, err
+			}
+			return int8(i), nil
 		case 16:
-			return int16(n.Int64()), nil
+			i, err := asIntN(n, 16)
+			if err != nil {
+				return nil, err
+			}
+			return int16(i), nil
 		case 32:
-			return int32(n.Int64()), nil
+			i, err := asIntN(n, 32)
+			if err != nil {
+				return nil, err
+			}
+			return int32(i), nil
 		case 64:
-			return n.Int64(), nil
+			i, err := asIntN(n, 64)
+			if err != nil {
+				return nil, err
+			}
+			return i, nil
 		default:
 			return n, nil
 		}
 	default:
 		return nil, fmt.Errorf("unsupported attribute type %q", t.String())
 	}
+}
+
+func asUintN(n *big.Int, bits uint) (uint64, error) {
+	if n.Sign() < 0 || n.BitLen() > int(bits) {
+		return 0, fmt.Errorf("uint%d out of range: %s", bits, n.String())
+	}
+	return n.Uint64(), nil
+}
+
+func asIntN(n *big.Int, bits uint) (int64, error) {
+	max := new(big.Int).Lsh(big.NewInt(1), bits-1)
+	max.Sub(max, big.NewInt(1))
+	min := new(big.Int).Neg(new(big.Int).Lsh(big.NewInt(1), bits-1))
+	if n.Cmp(min) < 0 || n.Cmp(max) > 0 {
+		return 0, fmt.Errorf("int%d out of range: %s", bits, n.String())
+	}
+	return n.Int64(), nil
 }
 
 // valueEqual reports whether two canonical values are equal.

@@ -171,6 +171,28 @@ func TestParseJSONFlatResourceAttrs(t *testing.T) {
 	}
 }
 
+func TestParseJSONTrailingContent(t *testing.T) {
+	raw := []byte(`
+{
+	"chain": { "chain_id": 1 },
+	"resources": [
+		{
+			"type": "protocol",
+			"name": "main",
+			"address": "0x0000000000000000000000000000000000000001",
+			"feeBps": 30,
+			"paused": false
+		}
+	]
+}
+not-json
+`)
+
+	if _, err := Parse(raw, "bad.json"); err == nil {
+		t.Fatal("expected parse error for trailing non-JSON content")
+	}
+}
+
 func TestParseSyntaxError(t *testing.T) {
 	if _, err := Parse([]byte(`chain { = }`), "bad.hcl"); err == nil {
 		t.Error("expected parse error")
