@@ -2,7 +2,7 @@
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 Use the [issue templates](.github/ISSUE_TEMPLATE/) when reporting bugs or
-requesting features.
+requesting features. Pull requests use the [PR template](.github/pull_request_template.md).
 
 ## Prerequisites
 
@@ -69,9 +69,11 @@ documented in [docs/adding-a-resource.md](docs/adding-a-resource.md).
 ## Commit / PR
 
 Small, focused commits with imperative subjects. PRs should describe the
-behaviour change and include test output where relevant.
+behaviour change and include test output where relevant. The
+[PR template](.github/pull_request_template.md) is pre-filled when you open a pull request.
 
 ## Community
 
 - [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security policy](.github/SECURITY.md) — report vulnerabilities privately
 - [Open an issue](https://github.com/aleksandarknezevic/chainform/issues/new/choose)
