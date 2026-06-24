@@ -8,7 +8,7 @@ see the [README](../README.md#what-works-today) and [roadmap](roadmap.md).
 
 The configuration file is the source of truth for how a protocol *should* be
 configured. It is declarative: you describe the end state, not the steps. Only
-attributes you declare are managed — anything omitted is left untouched on
+attributes you declare are managed - anything omitted is left untouched on
 chain. See [configuration.md](configuration.md) for the schema.
 
 ## Actual state
@@ -28,8 +28,8 @@ attribute, and resources only report drift for attributes that are declared.
 A managed on-chain entity, analogous to a Terraform resource. A resource type
 (e.g. `protocol`) knows how to:
 
-- **Refresh** — read its current state from the chain.
-- **Plan** — compare desired vs. actual and emit the operations to converge.
+- **Refresh** - read its current state from the chain.
+- **Plan** - compare desired vs. actual and emit the operations to converge.
 
 Resources implement the [`resource.Resource`](../internal/resource/resource.go)
 interface. Two types ship today: `protocol`, a hand-written reference type
@@ -41,7 +41,7 @@ exposes them (OpenZeppelin Pausable); otherwise it falls back to `setPaused(bool
 
 ## Operation
 
-A single contract call required to reduce drift — for example
+A single contract call required to reduce drift - for example
 `setFeeBps(30)`. An operation carries its target address, method, ABI input
 types, arguments, a human-readable drift reason, and (after planning) the
 encoded calldata. Operations are the atoms of a plan.
@@ -64,6 +64,6 @@ proposals.
 The abstraction over reading chain state
 ([`chain.Reader`](../internal/chain/reader.go)). Implementations:
 
-- `chain.Client` — live JSON-RPC via go-ethereum.
-- `chain.MockReader` — programmable canned values, for tests.
-- `chain.DemoReader` — fixed drifted values, powering `--mock` for offline demos.
+- `chain.Client` - live JSON-RPC via go-ethereum.
+- `chain.MockReader` - programmable canned values, for tests.
+- `chain.DemoReader` - fixed drifted values, powering `--mock` for offline demos.

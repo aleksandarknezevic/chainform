@@ -7,7 +7,7 @@
 
 **ChainForm is an early-stage CLI** that compares declared on-chain configuration
 (HCL/JSON) against live contract state, reports drift, and encodes the resulting
-calls as reviewable operations. **It does not execute transactions** — you review
+calls as reviewable operations. **It does not execute transactions** - you review
 the plan and run it through your existing multisig or governance flow.
 
 Install:
@@ -24,14 +24,14 @@ the [Docker image](#docker).
 | Capability | Status |
 | --- | --- |
 | Declarative config (HCL + JSON), one EVM chain per file | **Yes** |
-| `validate` — schema + resource/ABI checks (no RPC) | **Yes** |
-| `show` — read on-chain state (`eth_call`) | **Yes** |
-| `plan` — drift detection, human + `--json` output, exit 1 on drift | **Yes** |
-| `import` — snapshot a contract into config (getter/setter + `expect`) | **Yes** |
-| `export` — Safe Transaction Builder JSON batch (import manually in Safe app) | **Yes** |
+| `validate` - schema + resource/ABI checks (no RPC) | **Yes** |
+| `show` - read on-chain state (`eth_call`) | **Yes** |
+| `plan` - drift detection, human + `--json` output, exit 1 on drift | **Yes** |
+| `import` - snapshot a contract into config (getter/setter + `expect`) | **Yes** |
+| `export` - Safe Transaction Builder JSON batch (import manually in Safe app) | **Yes** |
 | ABI-driven `contract` resource (`X()` / `setX`, `pause`/`unpause`) | **Yes** |
 | Read-only monitoring via `expect` blocks | **Yes** |
-| Mainnet example (Lido + Chainlink) | **Yes** — [docs/mainnet-example.md](docs/mainnet-example.md) |
+| Mainnet example (Lido + Chainlink) | **Yes** - [docs/mainnet-example.md](docs/mainnet-example.md) |
 | Offline demo (`--mock`) | **Yes** |
 
 **Supported today:** simple scalar types (bool, string, address, integers),
@@ -40,26 +40,26 @@ single-argument setters following `setX` naming (plus `pause`/`unpause` for
 
 ## What is not built yet
 
-Do not expect these today — they are on the [roadmap](docs/roadmap.md):
+Do not expect these today - they are on the [roadmap](docs/roadmap.md):
 
 | Capability | Status |
 | --- | --- |
-| Execute / apply plans (sign and send txs) | **No** — plan and export only |
+| Execute / apply plans (sign and send txs) | **No** - plan and export only |
 | AccessControl / `grantRole` resources | **No** |
 | Proxy / upgrade admin resources | **No** |
-| Governance proposal export (Tally, OZ Governor, …) | **No** — Safe batch JSON only |
+| Governance proposal export (Tally, OZ Governor, …) | **No** - Safe batch JSON only |
 | Multi-chain in one config | **No** |
-| Continuous or scheduled drift monitoring | **No** — run `plan` yourself (cron/K8s works) |
-| GitHub App / PR plan comments | **No** — use `plan` exit code or `--json` in your CI |
+| Continuous or scheduled drift monitoring | **No** - run `plan` yourself (cron/K8s works) |
+| GitHub App / PR plan comments | **No** - use `plan` exit code or `--json` in your CI |
 | Hosted control plane / SaaS | **No** |
-| Complex ABI types (structs, arrays, enums) | **Limited** — scalars only |
+| Complex ABI types (structs, arrays, enums) | **Limited** - scalars only |
 
 ChainForm is **not** a governance platform, wallet, deployment tool, or block
 explorer. It does **not** hold private keys.
 
 ## Try it
 
-**Mainnet (read-only, ~5 min)** — needs `RPC_URL`:
+**Mainnet (read-only, ~5 min)** - needs `RPC_URL`:
 
 ```bash
 export RPC_URL=https://your-mainnet-rpc.example
@@ -68,7 +68,7 @@ chainform show   -f examples/mainnet.hcl
 chainform plan   -f examples/mainnet.hcl
 ```
 
-**Offline (managed drift + Safe export)** — no RPC:
+**Offline (managed drift + Safe export)** - no RPC:
 
 ```bash
 chainform plan   -f examples/protocol.hcl --mock
@@ -91,12 +91,12 @@ config → plan (read chain, diff) → review → export to Safe batch → human
 ```
 
 The longer-term direction is GitOps-style protocol ops (PR checks, richer
-resources, optional apply) — see [roadmap](docs/roadmap.md). Today you get the
+resources, optional apply) - see [roadmap](docs/roadmap.md). Today you get the
 **read and plan** half of that loop, not the full ArgoCD-style control plane.
 
 ## How it works
 
-Declare desired state. Attribute names mirror contract getters/setters — e.g.
+Declare desired state. Attribute names mirror contract getters/setters - e.g.
 `feeBps` is read via `feeBps()` and reconciled via `setFeeBps()` when drifted:
 
 ```hcl
@@ -144,7 +144,7 @@ chainform import \
 ```
 
 A plan against the imported snapshot should report no drift until you change
-desired values. `import` reads every ABI getter — large contracts may need
+desired values. `import` reads every ABI getter - large contracts may need
 care; see roadmap for selective import.
 
 ## Commands
@@ -171,7 +171,7 @@ Best fit **right now**:
   **read-only invariants** (`expect`) on mainnet
 
 **Not a fit yet** if you need role graphs, proxy upgrades, governor proposals,
-automatic execution, or multi-chain reconciliation — track
+automatic execution, or multi-chain reconciliation - track
 [roadmap](docs/roadmap.md) instead.
 
 ## Docker

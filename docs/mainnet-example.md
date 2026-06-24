@@ -1,7 +1,7 @@
-# Mainnet example — Lido + Chainlink
+# Mainnet example - Lido + Chainlink
 
 This is the fastest way to see ChainForm against **real** Ethereum mainnet
-contracts. No `--mock`, no demo addresses — just an RPC URL and five minutes.
+contracts. No `--mock`, no demo addresses - just an RPC URL and five minutes.
 
 The example file is [`examples/mainnet.hcl`](../examples/mainnet.hcl). It
 monitors two production contracts with read-only `expect` blocks:
@@ -12,7 +12,7 @@ monitors two production contracts with read-only `expect` blocks:
 | `ethUsdOracle` | [Chainlink ETH/USD](https://etherscan.io/address/0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419) | Oracle decimals, description, proxy version |
 
 ABIs live in `testdata/lido-steth.abi.json` and
-`testdata/chainlink-eth-usd.abi.json` — trimmed to the getters this example
+`testdata/chainlink-eth-usd.abi.json` - trimmed to the getters this example
 uses, not full contract ABIs from Etherscan.
 
 Nothing in this config is **managed** (no `setX` setters). `plan` never proposes
@@ -33,7 +33,7 @@ Copy the environment template and set your endpoint:
 
 ```bash
 cp .env.example .env
-# edit .env — set RPC_URL to your mainnet endpoint
+# edit .env - set RPC_URL to your mainnet endpoint
 export RPC_URL
 ```
 
@@ -48,7 +48,7 @@ chainform validate -f examples/mainnet.hcl
 # 2. Inspect live on-chain state
 chainform show -f examples/mainnet.hcl
 
-# 3. Check invariants — exit 0 when everything matches
+# 3. Check invariants - exit 0 when everything matches
 chainform plan -f examples/mainnet.hcl
 ```
 
@@ -103,14 +103,14 @@ expect {
 }
 ```
 
-- **`getFee`** — Lido protocol fee in basis points (999 = 9.99%). Can change via
+- **`getFee`** - Lido protocol fee in basis points (999 = 9.99%). Can change via
   governance; if `plan` reports drift here, run `show` and update the value or
   investigate a governance vote.
-- **`isStopped`** — emergency stop flag. When `true`, the protocol is halted
+- **`isStopped`** - emergency stop flag. When `true`, the protocol is halted
   (similar in spirit to a `paused` flag on other contracts).
 
 `getTotalPooledEther` is readable via `show` but intentionally **not** in
-`expect` — it changes every block as rewards accrue.
+`expect` - it changes every block as rewards accrue.
 
 ### Chainlink ETH/USD (`ethUsdOracle`)
 
@@ -122,15 +122,15 @@ expect {
 }
 ```
 
-- **`decimals`** / **`description`** — stable feed metadata.
-- **`version`** — aggregator proxy version; changes only on feed upgrades.
+- **`decimals`** / **`description`** - stable feed metadata.
+- **`version`** - aggregator proxy version; changes only on feed upgrades.
 
 `latestAnswer` and `latestTimestamp` are visible in `show` but omitted from
 `expect` because the price updates continuously.
 
 ## Simulating drift
 
-Change one `expect` value and run `plan` again — for example set `getFee = 1000`
+Change one `expect` value and run `plan` again - for example set `getFee = 1000`
 when on-chain is `999`:
 
 ```bash
@@ -138,7 +138,7 @@ chainform plan -f examples/mainnet.hcl
 ```
 
 ```
-Read-only drift: 1 expectation(s) not met — no setter, cannot be changed:
+Read-only drift: 1 expectation(s) not met - no setter, cannot be changed:
 
   ! lidoSteth.getFee (uint256): on-chain 999, expected 1000
 ```
@@ -167,6 +167,6 @@ commit a config under your repo and point the workflow at it.
 
 Related docs:
 
-- [Configuration reference](configuration.md) — `expect` blocks and schema
-- [Concepts](concepts.md) — desired vs actual state, drift, read-only assertions
-- [Offline walkthrough](walkthrough.md) — import → plan → export → Safe with `--mock`
+- [Configuration reference](configuration.md) - `expect` blocks and schema
+- [Concepts](concepts.md) - desired vs actual state, drift, read-only assertions
+- [Offline walkthrough](walkthrough.md) - import → plan → export → Safe with `--mock`

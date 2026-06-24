@@ -27,7 +27,7 @@ minimal set of operations needed to converge them.
 
 | Package | Responsibility | Depends on |
 | --- | --- | --- |
-| `internal/config` | Desired-state schema, HCL loader, validation | — |
+| `internal/config` | Desired-state schema, HCL loader, validation | - |
 | `internal/chain` | EVM reads (`Reader`), ABI encode/decode, live + mock readers | go-ethereum |
 | `internal/abi` | ABI loader; derives getters/setters/attributes for ABI-driven resources | go-ethereum |
 | `internal/resource` | `Resource` contract, `Operation`, type registry, `protocol` + ABI-driven `contract` | `config`, `chain`, `abi` |
@@ -56,7 +56,7 @@ configured resource it:
 
 The result is a `plan.Plan`: an ordered, chain-scoped list of operations that
 can be rendered for review or exported for execution. Nothing in this path
-sends a transaction — execution is intentionally a separate, explicit step
+sends a transaction - execution is intentionally a separate, explicit step
 (today: export to a Safe batch; later: an apply engine).
 
 ## Why this shape

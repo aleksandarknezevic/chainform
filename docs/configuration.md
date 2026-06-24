@@ -114,23 +114,23 @@ resource "contract" "protocol" {
 Supported attribute types: `bool`, `string`, `address`, and the integer types
 `uintN` / `intN`. An attribute with a getter but no `setX` setter (a read-only
 value) cannot be managed, and declaring it as a top-level attribute is an error
-— use an [`expect` block](#expect-block--read-only-assertions) to assert it
+- use an [`expect` block](#expect-block--read-only-assertions) to assert it
 instead. Only declared attributes are read and managed; omit one to leave it
 untouched.
 
-A `contract` with no managed attributes is valid — it is read-only and
+A `contract` with no managed attributes is valid - it is read-only and
 produces no operations, but `chainform show` still prints every getter derived
 from its ABI.
 
 Examples:
 
-- [`examples/feed.hcl`](../examples/feed.hcl) — Chainlink ETH/USD on Sepolia (testnet)
-- [`examples/mainnet.hcl`](../examples/mainnet.hcl) — Lido stETH + Chainlink ETH/USD on
+- [`examples/feed.hcl`](../examples/feed.hcl) - Chainlink ETH/USD on Sepolia (testnet)
+- [`examples/mainnet.hcl`](../examples/mainnet.hcl) - Lido stETH + Chainlink ETH/USD on
   Ethereum mainnet; full walkthrough in [mainnet-example.md](mainnet-example.md)
 
-#### `expect` block — read-only assertions
+#### `expect` block - read-only assertions
 
-Some values have a getter but no setter, so they cannot be managed — but you
+Some values have a getter but no setter, so they cannot be managed - but you
 may still want to assert what they should be and be warned if they drift. An
 `expect` block declares those read-only invariants:
 
@@ -148,7 +148,7 @@ resource "contract" "ethUsdFeed" {
 
 Each `expect` attribute needs only a getter `X()` in the ABI (no setter). On
 `plan`, ChainForm reads the getter and, if the value differs from the
-expectation, reports it as **read-only drift** — a warning that is never turned
+expectation, reports it as **read-only drift** - a warning that is never turned
 into a transaction (there is no setter to call), so `export` is unaffected. An
 attribute cannot be both managed (top-level) and expected. Only the ABI-driven
 `contract` resource supports `expect`.

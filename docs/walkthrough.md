@@ -17,7 +17,7 @@ make build
 
 ## 1. Import a contract into a config
 
-You don't start from a blank file — point `import` at a deployed contract and
+You don't start from a blank file - point `import` at a deployed contract and
 its ABI, and ChainForm snapshots the current on-chain state into HCL:
 
 ```bash
@@ -55,13 +55,13 @@ resource "contract" "main" {
 
 Two kinds of attributes are derived from the ABI:
 
-- **Managed** (top-level): values with both a getter and a `setX` setter —
+- **Managed** (top-level): values with both a getter and a `setX` setter -
   `feeBps`/`setFeeBps`, `owner`/`setOwner`, `paused`/`pause`+`unpause` (or
   `setPaused` when toggle methods are absent). ChainForm can reconcile these.
-- **`expect`** (read-only): values with a getter but no setter — `name`. These
+- **`expect`** (read-only): values with a getter but no setter - `name`. These
   can drift but can never be changed, so they are asserted, not managed.
 
-## 2. Plan — a faithful snapshot has no drift
+## 2. Plan - a faithful snapshot has no drift
 
 Because `import` captured the current values, planning against the same state
 proposes nothing:
@@ -84,7 +84,7 @@ Now edit `protocol.hcl` and set the desired fee to `30`:
   feeBps = 30
 ```
 
-Planning now shows exactly the operation needed to converge — and the ABI-encoded
+Planning now shows exactly the operation needed to converge - and the ABI-encoded
 calldata for it:
 
 ```bash
@@ -138,9 +138,9 @@ into the Safe app for multisig review and execution:
 ./bin/chainform export -f protocol.hcl --mock -o batch.json
 ```
 
-Only operations become transactions — read-only `expect` assertions never do.
+Only operations become transactions - read-only `expect` assertions never do.
 
-## 5. Show — inspect state any time
+## 5. Show - inspect state any time
 
 `show` prints the current on-chain values without diffing, including the
 read-only ones:

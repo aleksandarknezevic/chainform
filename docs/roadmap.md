@@ -22,7 +22,7 @@ desired-state config → drift detection → plan → Safe export.
       (`chainform show`, over the `resource.Inspector` capability)
 - [x] Read-only assertions: `expect` blocks check getter-only values and report
       read-only drift as warnings, never as operations (`resource.Asserter`)
-- [x] `import`: bootstrap a config from a live contract's current state — managed
+- [x] `import`: bootstrap a config from a live contract's current state - managed
       attributes + `expect` assertions, round-trips to a no-drift plan
       (`chainform import`, `config.WriteResource`)
 - [x] Provider-level `validate`: builds each resource (ABI paths, known
@@ -41,7 +41,7 @@ features. These are ordered so each unlocks the next.
 
 - [x] **Real, copy-paste example against mainnet.** Read-only `contract` +
       `expect` config for Lido stETH (fee, emergency stop) and Chainlink ETH/USD
-      (oracle metadata) on Ethereum mainnet — [`examples/mainnet.hcl`](../examples/mainnet.hcl),
+      (oracle metadata) on Ethereum mainnet - [`examples/mainnet.hcl`](../examples/mainnet.hcl),
       ABIs in `testdata/`, walkthrough in [mainnet-example.md](mainnet-example.md).
 - [ ] **Golden-path doc.** A single end-to-end walkthrough on one well-known
       protocol: `import → edit → plan → export → Safe`, linking the real
@@ -96,5 +96,5 @@ deployed contracts.
 - Resources depend only on `chain.Reader`, never on a concrete client.
 - A resource with no drift produces no operations.
 - Read-only drift (`expect` assertions) is reported as a warning, never turned
-  into an operation — there is no setter to execute.
+  into an operation - there is no setter to execute.
 - ABI encoding stays centralized in `internal/chain`.

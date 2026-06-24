@@ -1,7 +1,7 @@
 # Adding a resource type
 
 Resource types are the primary extension point. A new type plugs into the
-reconciliation loop by implementing one interface and registering itself — no
+reconciliation loop by implementing one interface and registering itself - no
 changes to the planner, CLI, or config schema are required.
 
 Use [`internal/resource/protocol.go`](../internal/resource/protocol.go) as the
@@ -11,7 +11,7 @@ working template.
 > already covers your case: if the contract exposes `X()` getters and `setX(...)`
 > setters, you can manage it from configuration alone (see the
 > [configuration reference](configuration.md#contract-abi-driven-resource)). Add
-> a new type when you need custom logic — multi-call operations, derived state,
+> a new type when you need custom logic - multi-call operations, derived state,
 > or naming that doesn't follow the `setX` convention.
 
 ## 1. Implement `resource.Resource`
@@ -33,7 +33,7 @@ Guidelines:
   the returned values. Only read attributes that are actually managed.
 - **`Plan`** compares the desired state held on the struct against `current`
   and returns one `Operation` per drifted attribute. **Return no operations
-  when there is no drift** — this invariant is what makes an empty plan
+  when there is no drift** - this invariant is what makes an empty plan
   meaningful. Describe each operation by `Method` + `Inputs` + `Args`; the
   planner encodes the calldata for you via `chain.Pack`.
 
@@ -77,4 +77,4 @@ package. Argument Go types must match the ABI types:
 | `string` | `string` |
 
 When a resource grows beyond a couple of attributes, prefer driving it from a
-parsed contract ABI rather than hand-written getters/setters — see the roadmap.
+parsed contract ABI rather than hand-written getters/setters - see the roadmap.
