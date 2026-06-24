@@ -5,6 +5,15 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/aleksandarknezevic/chainform)](https://github.com/aleksandarknezevic/chainform/blob/main/go.mod)
 [![License](https://img.shields.io/github/license/aleksandarknezevic/chainform)](https://github.com/aleksandarknezevic/chainform/blob/main/LICENSE)
 
+Install the CLI from source:
+
+```bash
+go install github.com/aleksandarknezevic/chainform/cmd/chainform@latest
+```
+
+Or use a [release binary](https://github.com/aleksandarknezevic/chainform/releases) / the
+[Docker image](#docker) published on each tag.
+
 ## Infrastructure as Code and Configuration Management for Blockchain Protocols
 
 ChainForm is a declarative configuration management tool for blockchain protocols.
@@ -184,6 +193,21 @@ chainform export     # export the plan as a Safe transaction batch
 chainform version    # print the version
 ```
 
+## Docker
+
+Each release publishes a multi-arch image (`linux/amd64`, `linux/arm64`) to GitHub
+Container Registry:
+
+```bash
+docker run --rm -v "$(pwd):/work" -w /work \
+  ghcr.io/aleksandarknezevic/chainform:latest \
+  plan -f examples/protocol.hcl --mock
+```
+
+Mount the directory that contains your config (and any relative ABI paths). For
+live networks, pass `-e RPC_URL=...` and drop `--mock`. Pin a release tag instead
+of `latest` in production (for example `ghcr.io/aleksandarknezevic/chainform:v0.1.0`).
+
 ## Why Not Scripts?
 
 Scripts can change state.
@@ -195,7 +219,7 @@ Scripts do not tell you:
 - whether actual state matches expectations
 - what still requires reconciliation
 
-ChainForm focuses on continuously reconciling desired and actual protocol state.
+ChainForm focuses on reconciling desired and actual protocol state at plan time.
 
 ## Is ChainForm Terraform for Blockchain?
 

@@ -1,4 +1,4 @@
-module github.com/chainform/chainform
+module github.com/aleksandarknezevic/chainform
 
 go 1.26.4
 

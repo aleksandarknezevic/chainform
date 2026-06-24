@@ -17,8 +17,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/chainform/chainform/internal/chain"
-	"github.com/chainform/chainform/internal/config"
+	"github.com/aleksandarknezevic/chainform/internal/chain"
+	"github.com/aleksandarknezevic/chainform/internal/config"
 )
 
 // State is a bag of observed or desired attributes for a single resource.

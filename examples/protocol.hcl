@@ -20,6 +20,6 @@ resource "protocol" "main" {
   address = "0xF38D8Be3E0A7B3c94C00a25b4A443ca062f343f5"
 
   # Only declared attributes are managed; anything omitted is left as-is.
-  feeBps = 500
+  feeBps = 30
   paused = false
 }

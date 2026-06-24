@@ -1,5 +1,5 @@
 BINARY := chainform
-PKG := github.com/chainform/chainform
+PKG := github.com/aleksandarknezevic/chainform
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 LDFLAGS := -X main.version=$(VERSION)
 

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/chainform/chainform/internal/plan"
+	"github.com/aleksandarknezevic/chainform/internal/plan"
 )
 
 // safeBatch mirrors the Safe Transaction Builder JSON schema (version 1.0).

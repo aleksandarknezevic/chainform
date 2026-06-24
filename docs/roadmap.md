@@ -28,6 +28,8 @@ are roughly ordered and mapped to where they land in the codebase.
       `paused` when present in the ABI (preferred over `setPaused(bool)`).
 - [x] `plan` exits with code 1 when drift is detected (managed operations or
       failed `expect` assertions), so CI can gate without parsing JSON.
+- [x] Multi-arch Docker images on release (`ghcr.io/<owner>/chainform`, linux
+      amd64/arm64).
 
 ## Next (priority order)
 

@@ -1,0 +1,9 @@
+.git
+.github
+bin
+dist
+**/*_test.go
+**/*.md
+!README.md
+.env
+.env.*

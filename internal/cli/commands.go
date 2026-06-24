@@ -7,9 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/chainform/chainform/internal/config"
-	"github.com/chainform/chainform/internal/export"
-	"github.com/chainform/chainform/internal/plan"
+	"github.com/aleksandarknezevic/chainform/internal/config"
+	"github.com/aleksandarknezevic/chainform/internal/export"
+	"github.com/aleksandarknezevic/chainform/internal/plan"
 )
 
 const defaultConfigFile = "chainform.hcl"

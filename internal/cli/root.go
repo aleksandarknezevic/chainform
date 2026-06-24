@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/chainform/chainform/internal/chain"
-	"github.com/chainform/chainform/internal/config"
+	"github.com/aleksandarknezevic/chainform/internal/chain"
+	"github.com/aleksandarknezevic/chainform/internal/config"
 )
 
 // NewRootCmd builds the root `chainform` command tree.

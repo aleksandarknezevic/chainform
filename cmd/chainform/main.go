@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/chainform/chainform/internal/cli"
+	"github.com/aleksandarknezevic/chainform/internal/cli"
 )
 
 // version is overridden at build time via -ldflags "-X main.version=...".

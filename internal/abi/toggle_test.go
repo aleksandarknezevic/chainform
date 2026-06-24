@@ -3,7 +3,7 @@ package abi_test
 import (
 	"testing"
 
-	"github.com/chainform/chainform/internal/abi"
+	"github.com/aleksandarknezevic/chainform/internal/abi"
 )
 
 func TestBoolTogglePairs_Protocol(t *testing.T) {

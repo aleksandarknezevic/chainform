@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/chainform/chainform/internal/chain"
-	"github.com/chainform/chainform/internal/config"
-	"github.com/chainform/chainform/internal/resource"
+	"github.com/aleksandarknezevic/chainform/internal/chain"
+	"github.com/aleksandarknezevic/chainform/internal/config"
+	"github.com/aleksandarknezevic/chainform/internal/resource"
 )
 
 // Planner reconciles a configuration against actual on-chain state read

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/chainform/chainform/internal/cli"
+	"github.com/aleksandarknezevic/chainform/internal/cli"
 )
 
 func repoRoot(t *testing.T) string {

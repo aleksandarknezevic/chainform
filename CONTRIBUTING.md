@@ -27,6 +27,13 @@ supplies intentionally-drifted state:
 
 Drop `--mock` and set `RPC_URL` to run against a live network.
 
+## Docker
+
+```bash
+docker build -t chainform:local --build-arg VERSION=dev .
+docker run --rm -v "$(pwd):/work" -w /work chainform:local plan -f examples/protocol.hcl --mock
+```
+
 ## Layout
 
 See [docs/architecture.md](docs/architecture.md) for the package map and the

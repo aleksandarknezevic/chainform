@@ -7,9 +7,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/chainform/chainform/internal/chain"
-	"github.com/chainform/chainform/internal/config"
-	"github.com/chainform/chainform/internal/resource"
+	"github.com/aleksandarknezevic/chainform/internal/chain"
+	"github.com/aleksandarknezevic/chainform/internal/config"
+	"github.com/aleksandarknezevic/chainform/internal/resource"
 )
 
 const (

@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/chainform/chainform/internal/cli"
-	"github.com/chainform/chainform/internal/config"
+	"github.com/aleksandarknezevic/chainform/internal/cli"
+	"github.com/aleksandarknezevic/chainform/internal/config"
 
-	_ "github.com/chainform/chainform/internal/resource"
+	_ "github.com/aleksandarknezevic/chainform/internal/resource"
 )
 
 func TestValidateConfig_RejectsUnknownType(t *testing.T) {

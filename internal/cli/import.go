@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/chainform/chainform/internal/abi"
-	"github.com/chainform/chainform/internal/chain"
-	"github.com/chainform/chainform/internal/config"
+	"github.com/aleksandarknezevic/chainform/internal/abi"
+	"github.com/aleksandarknezevic/chainform/internal/chain"
+	"github.com/aleksandarknezevic/chainform/internal/config"
 )
 
 func newImportCmd() *cobra.Command {

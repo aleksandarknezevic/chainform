@@ -3,8 +3,8 @@ package plan_test
 import (
 	"testing"
 
-	"github.com/chainform/chainform/internal/plan"
-	"github.com/chainform/chainform/internal/resource"
+	"github.com/aleksandarknezevic/chainform/internal/plan"
+	"github.com/aleksandarknezevic/chainform/internal/resource"
 )
 
 func TestHasDrift_Operations(t *testing.T) {

@@ -12,8 +12,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/chainform/chainform/internal/config"
-	"github.com/chainform/chainform/internal/resource"
+	"github.com/aleksandarknezevic/chainform/internal/config"
+	"github.com/aleksandarknezevic/chainform/internal/resource"
 )
 
 // Plan is the ordered set of operations required to converge actual on-chain

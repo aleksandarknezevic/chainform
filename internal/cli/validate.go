@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 
-	"github.com/chainform/chainform/internal/config"
-	"github.com/chainform/chainform/internal/resource"
+	"github.com/aleksandarknezevic/chainform/internal/config"
+	"github.com/aleksandarknezevic/chainform/internal/resource"
 )
 
 // ValidateConfig runs schema-level and provider-level validation without
