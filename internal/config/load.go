@@ -1,8 +1,11 @@
 package config
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -33,6 +36,27 @@ type hclResource struct {
 	Body hcl.Body `hcl:",remain"` // address, type-specific attributes, expect block
 }
 
+// jsonRoot mirrors the JSON configuration document structure.
+type jsonRoot struct {
+	Version   string         `json:"version"`
+	Chain     jsonChain      `json:"chain"`
+	Resources []jsonResource `json:"resources"`
+}
+
+type jsonChain struct {
+	Name    string `json:"name"`
+	ChainID uint64 `json:"chain_id"`
+	RPC     string `json:"rpc"`
+}
+
+type jsonResource struct {
+	Type    string         `json:"type"`
+	Name    string         `json:"name"`
+	Address string         `json:"address"`
+	Spec    map[string]any `json:"spec"`
+	Expect  map[string]any `json:"expect"`
+}
+
 // Load reads, parses, and validates a configuration file.
 func Load(path string) (*Config, error) {
 	raw, err := os.ReadFile(path)
@@ -42,10 +66,18 @@ func Load(path string) (*Config, error) {
 	return Parse(raw, path)
 }
 
-// Parse decodes and validates an HCL configuration document. filename is used
-// only for diagnostics. The env("VAR") function is available to resolve
-// environment variables (e.g. for RPC endpoints) at load time.
+// Parse decodes and validates a ChainForm configuration document as either
+// HCL or JSON. filename is used only for diagnostics. For HCL, the env("VAR")
+// function is available to resolve environment variables (e.g. for RPC
+// endpoints) at load time.
 func Parse(raw []byte, filename string) (*Config, error) {
+	if looksLikeJSON(raw) {
+		return parseJSON(raw, filename)
+	}
+	return parseHCL(raw, filename)
+}
+
+func parseHCL(raw []byte, filename string) (*Config, error) {
 	parser := hclparse.NewParser()
 	file, diags := parser.ParseHCL(raw, filename)
 	if diags.HasErrors() {
@@ -85,6 +117,242 @@ func Parse(raw []byte, filename string) (*Config, error) {
 		return nil, err
 	}
 	return cfg, nil
+}
+
+func parseJSON(raw []byte, filename string) (*Config, error) {
+	var top map[string]any
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	dec.UseNumber()
+	if err := dec.Decode(&top); err != nil {
+		return nil, fmt.Errorf("parse %s: %w", filename, err)
+	}
+	if err := dec.Decode(&struct{}{}); err == nil {
+		return nil, fmt.Errorf("parse %s: unexpected trailing JSON content", filename)
+	}
+
+	root, err := decodeJSONRoot(top)
+	if err != nil {
+		return nil, fmt.Errorf("decode %s: %w", filename, err)
+	}
+
+	cfg := &Config{
+		Version: root.Version,
+		Chain: Chain{
+			Name:    root.Chain.Name,
+			ChainID: root.Chain.ChainID,
+			RPC:     root.Chain.RPC,
+		},
+	}
+	for _, r := range root.Resources {
+		cfg.Resources = append(cfg.Resources, ResourceConfig{
+			Type:    r.Type,
+			Name:    r.Name,
+			Address: r.Address,
+			Spec:    r.Spec,
+			Expect:  r.Expect,
+		})
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
+func looksLikeJSON(raw []byte) bool {
+	trimmed := strings.TrimSpace(string(raw))
+	if trimmed == "" {
+		return false
+	}
+	return strings.HasPrefix(trimmed, "{") || strings.HasPrefix(trimmed, "[")
+}
+
+func decodeJSONRoot(top map[string]any) (jsonRoot, error) {
+	var out jsonRoot
+	if top == nil {
+		return out, fmt.Errorf("expected JSON object at top level")
+	}
+
+	if v, ok := top["version"]; ok {
+		s, ok := v.(string)
+		if !ok {
+			return out, fmt.Errorf("version: expected string, got %T", v)
+		}
+		out.Version = s
+	}
+
+	chainVal, ok := top["chain"]
+	if !ok {
+		return out, fmt.Errorf("chain: required")
+	}
+	chainMap, ok := chainVal.(map[string]any)
+	if !ok {
+		return out, fmt.Errorf("chain: expected object, got %T", chainVal)
+	}
+
+	if v, ok := chainMap["name"]; ok {
+		s, ok := v.(string)
+		if !ok {
+			return out, fmt.Errorf("chain.name: expected string, got %T", v)
+		}
+		out.Chain.Name = s
+	}
+	if v, ok := chainMap["rpc"]; ok {
+		s, ok := v.(string)
+		if !ok {
+			return out, fmt.Errorf("chain.rpc: expected string, got %T", v)
+		}
+		out.Chain.RPC = s
+	}
+	if v, ok := chainMap["chain_id"]; ok {
+		n, err := toJSONUint64(v)
+		if err != nil {
+			return out, fmt.Errorf("chain.chain_id: %w", err)
+		}
+		out.Chain.ChainID = n
+	}
+
+	resourcesVal, ok := top["resources"]
+	if !ok {
+		return out, fmt.Errorf("resources: required")
+	}
+	resourcesList, ok := resourcesVal.([]any)
+	if !ok {
+		return out, fmt.Errorf("resources: expected array, got %T", resourcesVal)
+	}
+
+	out.Resources = make([]jsonResource, 0, len(resourcesList))
+	for i, item := range resourcesList {
+		obj, ok := item.(map[string]any)
+		if !ok {
+			return out, fmt.Errorf("resources[%d]: expected object, got %T", i, item)
+		}
+		res, err := decodeJSONResource(obj)
+		if err != nil {
+			return out, fmt.Errorf("resources[%d]: %w", i, err)
+		}
+		out.Resources = append(out.Resources, res)
+	}
+
+	return out, nil
+}
+
+func decodeJSONResource(obj map[string]any) (jsonResource, error) {
+	var out jsonResource
+	out.Spec = map[string]any{}
+
+	for k, v := range obj {
+		switch k {
+		case "type":
+			s, ok := v.(string)
+			if !ok {
+				return out, fmt.Errorf("type: expected string, got %T", v)
+			}
+			out.Type = s
+		case "name":
+			s, ok := v.(string)
+			if !ok {
+				return out, fmt.Errorf("name: expected string, got %T", v)
+			}
+			out.Name = s
+		case "address":
+			s, ok := v.(string)
+			if !ok {
+				return out, fmt.Errorf("address: expected string, got %T", v)
+			}
+			out.Address = s
+		case "spec":
+			specMap, ok := v.(map[string]any)
+			if !ok {
+				return out, fmt.Errorf("spec: expected object, got %T", v)
+			}
+			spec, err := normalizeJSONMap(specMap)
+			if err != nil {
+				return out, fmt.Errorf("spec: %w", err)
+			}
+			for sk, sv := range spec {
+				out.Spec[sk] = sv
+			}
+		case "expect":
+			expectMap, ok := v.(map[string]any)
+			if !ok {
+				return out, fmt.Errorf("expect: expected object, got %T", v)
+			}
+			expect, err := normalizeJSONMap(expectMap)
+			if err != nil {
+				return out, fmt.Errorf("expect: %w", err)
+			}
+			out.Expect = expect
+		default:
+			cv, err := normalizeJSONValue(v)
+			if err != nil {
+				return out, fmt.Errorf("%s: %w", k, err)
+			}
+			// JSON also accepts flat resource attributes, same as HCL top-level attrs.
+			out.Spec[k] = cv
+		}
+	}
+
+	if len(out.Spec) == 0 {
+		out.Spec = nil
+	}
+	return out, nil
+}
+
+func normalizeJSONMap(m map[string]any) (map[string]any, error) {
+	out := make(map[string]any, len(m))
+	for k, v := range m {
+		cv, err := normalizeJSONValue(v)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", k, err)
+		}
+		out[k] = cv
+	}
+	return out, nil
+}
+
+func normalizeJSONValue(v any) (any, error) {
+	switch x := v.(type) {
+	case nil, bool, string:
+		return x, nil
+	case json.Number:
+		if i, err := x.Int64(); err == nil {
+			return int(i), nil
+		}
+		f, err := x.Float64()
+		if err != nil {
+			return nil, fmt.Errorf("invalid number %q", x.String())
+		}
+		return f, nil
+	case float64:
+		if x == float64(int64(x)) {
+			return int(x), nil
+		}
+		return x, nil
+	default:
+		return nil, fmt.Errorf("unsupported value type %T", v)
+	}
+}
+
+func toJSONUint64(v any) (uint64, error) {
+	switch x := v.(type) {
+	case json.Number:
+		i, err := x.Int64()
+		if err != nil {
+			return 0, fmt.Errorf("expected integer, got %q", x.String())
+		}
+		if i < 0 {
+			return 0, fmt.Errorf("must be non-negative, got %d", i)
+		}
+		return uint64(i), nil
+	case float64:
+		if x < 0 || x != float64(uint64(x)) {
+			return 0, fmt.Errorf("expected non-negative integer, got %v", x)
+		}
+		return uint64(x), nil
+	default:
+		return 0, fmt.Errorf("expected number, got %T", v)
+	}
 }
 
 // decodeResourceBody splits a resource block body into its address, its

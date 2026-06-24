@@ -1,7 +1,8 @@
 # Configuration reference
 
-A ChainForm configuration is an HCL document — the same language Terraform uses
-— describing the target chain and the resources to manage. See
+A ChainForm configuration can be written as either HCL (the same language
+Terraform uses) or JSON. Both formats map to the same schema describing the
+target chain and the resources to manage. See
 [`examples/protocol.hcl`](../examples/protocol.hcl) for a complete, runnable
 example. You can also generate one from a deployed contract with
 `chainform import` (see [Commands](../README.md#commands)) instead of writing it
@@ -133,6 +134,6 @@ not in the committed configuration.
 
 ## Validation
 
-`chainform validate -f <file>` runs HCL parsing, schema-level checks (required
-fields, non-zero chain id, unique resource names), and provider-level checks
-(valid address, known attributes) without contacting the chain.
+`chainform validate -f <file>` runs parsing (HCL or JSON), schema-level checks
+(required fields, non-zero chain id, unique resource names), and provider-level
+checks (valid address, known attributes) without contacting the chain.

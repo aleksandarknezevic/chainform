@@ -67,7 +67,7 @@ Typical use cases include:
 
 ## How It Works
 
-Define the desired state in HCL. Attribute names mirror the contract's
+Define the desired state in HCL or JSON. Attribute names mirror the contract's
 functions — `feeBps` is read via `feeBps()` and reconciled via `setFeeBps()`:
 
 ```hcl
