@@ -6,7 +6,7 @@ require (
 	github.com/ethereum/go-ethereum v1.14.12
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/spf13/cobra v1.10.2
-	github.com/zclconf/go-cty v1.16.3
+	github.com/zclconf/go-cty v1.18.1
 )
 
 require (
