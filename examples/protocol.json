@@ -1,0 +1,17 @@
+{
+  "version": "1",
+  "chain": {
+    "name": "ethereum sepolia",
+    "chain_id": 11155111,
+    "rpc": "https://rpc.example"
+  },
+  "resources": [
+    {
+      "type": "protocol",
+      "name": "main",
+      "address": "0xF38D8Be3E0A7B3c94C00a25b4A443ca062f343f5",
+      "feeBps": 500,
+      "paused": false
+    }
+  ]
+}

@@ -3,7 +3,8 @@
 A ChainForm configuration can be written as either HCL (the same language
 Terraform uses) or JSON. Both formats map to the same schema describing the
 target chain and the resources to manage. See
-[`examples/protocol.hcl`](../examples/protocol.hcl) for a complete, runnable
+[`examples/protocol.hcl`](../examples/protocol.hcl) and
+[`examples/protocol.json`](../examples/protocol.json) for complete, runnable
 example. You can also generate one from a deployed contract with
 `chainform import` (see [Commands](../README.md#commands)) instead of writing it
 by hand.
@@ -22,6 +23,28 @@ resource "protocol" "main" {     # resource "TYPE" "NAME"
 
   feeBps = 30                    # type-specific desired attributes
   paused = false
+}
+```
+
+Equivalent JSON form:
+
+```json
+{
+  "version": "1",
+  "chain": {
+    "name": "ethereum",
+    "chain_id": 1,
+    "rpc": "https://rpc.example"
+  },
+  "resources": [
+    {
+      "type": "protocol",
+      "name": "main",
+      "address": "0x...",
+      "feeBps": 30,
+      "paused": false
+    }
+  ]
 }
 ```
 
@@ -131,6 +154,10 @@ attribute cannot be both managed (top-level) and expected. Only the ABI-driven
 
 Keep RPC URLs and API keys in the environment or a local `.env` (gitignored),
 not in the committed configuration.
+
+Note: `env("NAME")` is an HCL function. In JSON, use a plain string value
+for `chain.rpc` (for example, inject it before running or keep JSON files
+local/non-committed when they include secrets).
 
 ## Validation
 

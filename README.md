@@ -132,7 +132,15 @@ The repo ships runnable examples:
 
 ```bash
 chainform plan -f examples/protocol.hcl --mock
+chainform plan -f examples/protocol.json --mock
 chainform show -f examples/feed.hcl     --mock   # read-only Chainlink ETH/USD feed
+```
+
+Validate both formats the same way:
+
+```bash
+chainform validate -f examples/protocol.hcl
+chainform validate -f examples/protocol.json
 ```
 
 ## Import Existing Protocols
