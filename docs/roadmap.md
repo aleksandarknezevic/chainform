@@ -31,6 +31,25 @@ are roughly ordered and mapped to where they land in the codebase.
 - [x] Multi-arch Docker images on release (`ghcr.io/<owner>/chainform`, linux
       amd64/arm64).
 
+## Adoption & onboarding (highest priority)
+
+The fastest path to real users is reducing time-to-first-value, not more
+features. These are ordered so each unlocks the next.
+
+- [ ] **Real, copy-paste example against mainnet.** A read-only `contract` +
+      `expect` config for a well-known protocol (e.g. Lido / AAVE): fee
+      parameters, oracle values, paused flags. Goal: anyone with an RPC URL
+      sees value in under 5 minutes — no mock, no hand-written ABI. Ships as
+      a runnable file under `examples/` plus its ABI in `testdata/`.
+- [ ] **Golden-path doc.** A single end-to-end walkthrough on one well-known
+      protocol: `import → edit → plan → export → Safe`, linking the real
+      contract on a block explorer. Builds directly on the example above so the
+      addresses and ABI are already in the repo.
+- [ ] **Reusable GitHub Action for `chainform plan`.** A ready-to-use workflow
+      in the repo so teams gate PRs on drift without writing CI from scratch.
+      Wraps the `plan` exit code (1 on drift) and `--json`; documented with a
+      copy-paste `uses:` snippet.
+
 ## Next (priority order)
 
 - [x] **Plan output formats.** Machine-readable JSON plan (`--json`) alongside
