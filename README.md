@@ -26,17 +26,21 @@ the [Docker image](#docker).
 | Declarative config (HCL + JSON), one EVM chain per file | **Yes** |
 | `validate` - schema + resource/ABI checks (no RPC) | **Yes** |
 | `show` - read on-chain state (`eth_call`) | **Yes** |
-| `plan` - drift detection, human + `--json` output, exit 1 on drift | **Yes** |
+| `plan` - drift detection, human + `--json` output, exit 1 on drift (2 on failure) | **Yes** |
 | `import` - snapshot a contract into config (getter/setter + `expect`) | **Yes** |
 | `export` - Safe Transaction Builder JSON batch (import manually in Safe app) | **Yes** |
 | ABI-driven `contract` resource (`X()` / `setX`, `pause`/`unpause`) | **Yes** |
 | Read-only monitoring via `expect` blocks | **Yes** |
+| Arrays, `bytes`/`bytesN`, enums as attribute types | **Yes** - [examples/vault.hcl](examples/vault.hcl) |
+| Reusable GitHub Action for drift gating | **Yes** - [docs/github-action.md](docs/github-action.md) |
+| Golden path on a real mainnet contract | **Yes** - [docs/golden-path.md](docs/golden-path.md) |
 | Mainnet example (Lido + Chainlink) | **Yes** - [docs/mainnet-example.md](docs/mainnet-example.md) |
 | Offline demo (`--mock`) | **Yes** |
 
-**Supported today:** simple scalar types (bool, string, address, integers),
-single-argument setters following `setX` naming (plus `pause`/`unpause` for
-`paused`), one chain per config, manual `chainform plan` runs.
+**Supported today:** scalars (bool, string, address, integers, enums), `bytes` /
+`bytesN`, and dynamic or fixed-size arrays of those; single-argument setters
+following `setX` naming (plus `pause`/`unpause` for `paused`), one chain per
+config, manual `chainform plan` runs.
 
 ## What is not built yet
 
@@ -49,10 +53,10 @@ Do not expect these today - they are on the [roadmap](docs/roadmap.md):
 | Proxy / upgrade admin resources | **No** |
 | Governance proposal export (Tally, OZ Governor, …) | **No** - Safe batch JSON only |
 | Multi-chain in one config | **No** |
-| Continuous or scheduled drift monitoring | **No** - run `plan` yourself (cron/K8s works) |
-| GitHub App / PR plan comments | **No** - use `plan` exit code or `--json` in your CI |
+| Continuous or scheduled drift monitoring | **No** - run `plan` yourself (cron, K8s, or a `schedule:` trigger on the action) |
+| GitHub App / PR plan comments | **No** - the action writes the plan to the job summary |
 | Hosted control plane / SaaS | **No** |
-| Complex ABI types (structs, arrays, enums) | **Limited** - scalars only |
+| Struct (tuple) attributes | **No** - struct-valued getters/setters are skipped, not guessed at |
 
 ChainForm is **not** a governance platform, wallet, deployment tool, or block
 explorer. It does **not** hold private keys.
@@ -73,10 +77,13 @@ chainform plan   -f examples/mainnet.hcl
 ```bash
 chainform plan   -f examples/protocol.hcl --mock
 chainform export -f examples/protocol.hcl --mock -o batch.json
+chainform plan   -f examples/vault.hcl --mock     # arrays, bytes32, bytes, enums
 ```
 
-See [mainnet-example.md](docs/mainnet-example.md) and the offline
-[walkthrough](docs/walkthrough.md).
+Start here: **[golden-path.md](docs/golden-path.md)** - `import → plan → edit →
+plan → export → Safe` on a real mainnet contract (Uniswap V3 Factory), with an
+offline variant. Also see [mainnet-example.md](docs/mainnet-example.md)
+(read-only monitoring) and the offline [walkthrough](docs/walkthrough.md).
 
 ## The problem (and the direction)
 
@@ -125,10 +132,23 @@ Plan: 2 operation(s)
        drift: paused: true -> false
 ```
 
-CI gate (fails when drift is detected):
+CI gate - `plan` exits `0` (no drift), `1` (drift), or `2` (the run itself
+failed), so a broken endpoint is never reported as drift:
 
 ```bash
-chainform plan -f protocol.hcl --mock
+chainform plan -f protocol.hcl
+```
+
+Or use the reusable action, which wraps the exit code, writes the plan to the job
+summary, and exposes a `drift` output
+([docs](docs/github-action.md), [template](examples/workflows/drift-check.yml)):
+
+```yaml
+- uses: actions/checkout@v4
+- uses: aleksandarknezevic/chainform@v0.0.2
+  with:
+      file: chainform.hcl
+      rpc-url: ${{ secrets.RPC_URL }}
 ```
 
 JSON reference: [docs/plan-json.md](docs/plan-json.md).
@@ -153,7 +173,7 @@ care; see roadmap for selective import.
 chainform validate    # config + resources, no RPC
 chainform import      # snapshot live contract → HCL
 chainform show        # on-chain state, no diff
-chainform plan        # drift + operations (exit 1 on drift)
+chainform plan        # drift + operations (exit 1 on drift, 2 on failure)
 chainform plan --json
 chainform export      # Safe Transaction Builder batch JSON
 chainform version
@@ -167,12 +187,12 @@ Best fit **right now**:
   `getter` / `setX` (or `pause`/`unpause`) pairs
 - Multisig operators who want a **reviewable calldata batch** before signing in
   Safe
-- Teams experimenting with **drift checks** in CI (`plan` exit code) or
-  **read-only invariants** (`expect`) on mainnet
+- Teams gating PRs on **drift checks** in CI (the [action](docs/github-action.md))
+  or asserting **read-only invariants** (`expect`) on mainnet
 
 **Not a fit yet** if you need role graphs, proxy upgrades, governor proposals,
-automatic execution, or multi-chain reconciliation - track
-[roadmap](docs/roadmap.md) instead.
+automatic execution, struct-valued parameters, or multi-chain reconciliation -
+track [roadmap](docs/roadmap.md) instead.
 
 ## Docker
 
@@ -189,11 +209,11 @@ production; pass `-e RPC_URL=...` for live runs.
 
 Full detail: **[docs/roadmap.md](docs/roadmap.md)**.
 
-**Next up:** golden-path doc on a real protocol, reusable GitHub Action for
-`plan`, richer ABI types.
+**Next up:** struct (tuple) attributes, PR plan comments, selective `import`
+filters for large contracts.
 
-**Later:** apply engine, AccessControl/proxy resources, governance export targets,
-multi-chain, scheduled monitoring, GitOps PR integration.
+**Later:** apply engine, simulation, AccessControl/proxy resources, governance
+export targets, multi-chain, scheduled monitoring.
 
 ## FAQ
 

@@ -167,6 +167,8 @@ commit a config under your repo and point the workflow at it.
 
 Related docs:
 
+- [Golden path](golden-path.md) - the full loop (`import → plan → export → Safe`)
+  on a real mainnet contract with a managed attribute
 - [Configuration reference](configuration.md) - `expect` blocks and schema
 - [Concepts](concepts.md) - desired vs actual state, drift, read-only assertions
 - [Offline walkthrough](walkthrough.md) - import → plan → export → Safe with `--mock`

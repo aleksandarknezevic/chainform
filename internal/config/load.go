@@ -332,6 +332,18 @@ func normalizeJSONValue(v any) (any, error) {
 			return int(x), nil
 		}
 		return x, nil
+	case []any:
+		out := make([]any, len(x))
+		for i, item := range x {
+			cv, err := normalizeJSONValue(item)
+			if err != nil {
+				return nil, fmt.Errorf("[%d]: %w", i, err)
+			}
+			out[i] = cv
+		}
+		return out, nil
+	case map[string]any:
+		return nil, fmt.Errorf("unsupported value type object: object values (Solidity structs) are not supported")
 	default:
 		return nil, fmt.Errorf("unsupported value type %T", v)
 	}
@@ -438,19 +450,20 @@ func evalAttr(name string, attr *hclsyntax.Attribute, ctx *hcl.EvalContext) (any
 	return gv, nil
 }
 
-// ctyToGo converts a cty scalar value into a plain Go value. Integers are
-// returned as int so resource providers receive the same types they would
-// from any other decoder.
+// ctyToGo converts a cty value into a plain Go value. Integers are returned as
+// int and lists as []any, so resource providers receive the same types they
+// would from any other decoder.
 func ctyToGo(v cty.Value) (any, error) {
 	if v.IsNull() {
 		return nil, nil
 	}
-	switch v.Type() {
-	case cty.Bool:
+	t := v.Type()
+	switch {
+	case t == cty.Bool:
 		return v.True(), nil
-	case cty.String:
+	case t == cty.String:
 		return v.AsString(), nil
-	case cty.Number:
+	case t == cty.Number:
 		bf := v.AsBigFloat()
 		if bf.IsInt() {
 			i, _ := bf.Int64()
@@ -458,8 +471,22 @@ func ctyToGo(v cty.Value) (any, error) {
 		}
 		f, _ := bf.Float64()
 		return f, nil
+	case t.IsTupleType(), t.IsListType(), t.IsSetType():
+		out := make([]any, 0, v.LengthInt())
+		for it := v.ElementIterator(); it.Next(); {
+			_, ev := it.Element()
+			gv, err := ctyToGo(ev)
+			if err != nil {
+				return nil, fmt.Errorf("[%d]: %w", len(out), err)
+			}
+			out = append(out, gv)
+		}
+		return out, nil
+	case t.IsObjectType(), t.IsMapType():
+		return nil, fmt.Errorf("unsupported value type %s: object values (Solidity structs) are not supported",
+			t.FriendlyName())
 	default:
-		return nil, fmt.Errorf("unsupported value type %s", v.Type().FriendlyName())
+		return nil, fmt.Errorf("unsupported value type %s", t.FriendlyName())
 	}
 }
 

@@ -9,8 +9,10 @@ import (
 	"fmt"
 	"io"
 	"math/big"
+	"reflect"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	"github.com/aleksandarknezevic/chainform/internal/config"
 	"github.com/aleksandarknezevic/chainform/internal/resource"
@@ -119,7 +121,7 @@ func (p *Plan) RenderJSON(w io.Writer) error {
 			To:       op.To.Hex(),
 			Method:   op.Method,
 			Inputs:   op.Inputs,
-			Args:     op.Args,
+			Args:     jsonArgs(op.Args),
 			ValueWei: bigIntStringOrZero(op.Value),
 			Reason:   op.Reason,
 			Calldata: fmt.Sprintf("0x%x", op.Calldata),
@@ -182,15 +184,62 @@ type jsonSummary struct {
 	Empty                bool `json:"empty"`
 }
 
+// jsonValue renders a canonical value (as carried by assertions): integers as
+// base-10 strings so no precision is lost, addresses and bytes as 0x hex, and
+// lists element by element.
 func jsonValue(v any) any {
 	switch x := v.(type) {
 	case *big.Int:
 		return x.String()
 	case common.Address:
 		return x.Hex()
+	case []byte:
+		return hexutil.Encode(x)
+	case []any:
+		out := make([]any, len(x))
+		for i, item := range x {
+			out[i] = jsonValue(item)
+		}
+		return out
 	default:
 		return x
 	}
+}
+
+// jsonArgs renders operation arguments, which are the exact Go values passed to
+// the ABI encoder. Numbers stay JSON numbers and addresses hex strings, as they
+// marshal natively; byte values become 0x hex strings (JSON has no byte type)
+// and lists are rendered element by element.
+func jsonArgs(args []any) []any {
+	if args == nil {
+		return nil
+	}
+	out := make([]any, len(args))
+	for i, a := range args {
+		out[i] = jsonArg(a)
+	}
+	return out
+}
+
+func jsonArg(v any) any {
+	if b, ok := v.([]byte); ok {
+		return hexutil.Encode(b)
+	}
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Array:
+		if rv.Type().Elem().Kind() == reflect.Uint8 {
+			b := make([]byte, rv.Len())
+			reflect.Copy(reflect.ValueOf(b), rv)
+			return hexutil.Encode(b)
+		}
+		out := make([]any, rv.Len())
+		for i := range out {
+			out[i] = jsonArg(rv.Index(i).Interface())
+		}
+		return out
+	}
+	return v
 }
 
 func bigIntStringOrZero(v *big.Int) string {
@@ -203,7 +252,7 @@ func bigIntStringOrZero(v *big.Int) string {
 func formatArgs(args []any) string {
 	parts := make([]string, len(args))
 	for i, a := range args {
-		parts[i] = fmt.Sprintf("%v", a)
+		parts[i] = resource.FormatValue(a)
 	}
 	return join(parts, ", ")
 }

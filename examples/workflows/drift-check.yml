@@ -1,0 +1,57 @@
+# Copy this file into your repository as .github/workflows/chainform.yml.
+#
+# It gates pull requests on configuration drift: the job fails when the live
+# contract state no longer matches the committed ChainForm config, and posts the
+# plan to the job summary. Nothing is signed or sent — `plan` only reads.
+#
+# Prerequisites:
+#   • a ChainForm config committed in the repository (see chainform import)
+#   • a repository secret RPC_URL with a JSON-RPC endpoint for the target chain
+#
+# Reference: https://github.com/aleksandarknezevic/chainform/blob/main/docs/github-action.md
+
+name: ChainForm
+
+on:
+    pull_request:
+    push:
+        branches:
+            - main
+    # Drift can appear without a commit — someone changes a parameter on chain.
+    # A schedule turns the same gate into continuous monitoring.
+    schedule:
+        - cron: "0 * * * *"
+
+permissions:
+    contents: read
+
+jobs:
+    drift:
+        name: Configuration drift
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: ChainForm plan
+              id: plan
+              uses: aleksandarknezevic/chainform@v0.0.2
+              with:
+                  file: chainform.hcl
+                  rpc-url: ${{ secrets.RPC_URL }}
+                  # Pin a release rather than tracking `latest` in production.
+                  version: v0.0.2
+                  json: "true"
+
+            # steps.plan.outputs.drift is "true" / "false"; the JSON plan is at
+            # steps.plan.outputs.plan-json-file when json: true.
+            - name: Upload plan
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: chainform-plan
+                  path: |
+                      ${{ steps.plan.outputs.plan-file }}
+                      ${{ steps.plan.outputs.plan-json-file }}
+                  if-no-files-found: ignore

@@ -40,10 +40,12 @@ func mockKey(addr common.Address, method string) string {
 }
 
 // DemoReader returns fixed values so that ChainForm commands produce meaningful
-// output without a live RPC endpoint. It serves the two shipped examples: a
-// mutable "protocol" contract whose state is intentionally drifted (feeBps =
-// 50, paused = true) so `plan` has work to do, and a read-only Chainlink-style
-// price feed so `show` has state to print. For demos and documentation only.
+// output without a live RPC endpoint. It serves the shipped examples: a mutable
+// "protocol" contract whose state is intentionally drifted (feeBps = 50,
+// paused = true) so `plan` has work to do, a read-only Chainlink-style price
+// feed so `show` has state to print, and a "vault" contract exercising the
+// richer attribute types (arrays, bytes32, bytes, enums). For demos and
+// documentation only.
 type DemoReader struct{}
 
 // Read implements Reader.
@@ -75,7 +77,34 @@ func (DemoReader) Read(_ context.Context, call ViewCall) ([]any, error) {
 	case "owner":
 		return []any{common.HexToAddress("0x21f73D42Eb58Ba49dDB685dc29D3bF5c0f0373CA")}, nil
 
+	// vault contract (richer attribute types: arrays, bytes32, bytes, enum)
+	case "keepers":
+		return []any{[]common.Address{
+			common.HexToAddress("0x1111111111111111111111111111111111111111"),
+			common.HexToAddress("0x2222222222222222222222222222222222222222"),
+		}}, nil
+	case "guardians":
+		return []any{[]common.Address{
+			common.HexToAddress("0x3333333333333333333333333333333333333333"),
+		}}, nil
+	case "merkleRoot":
+		return []any{demoMerkleRoot()}, nil
+	case "tierCaps":
+		return []any{[3]*big.Int{big.NewInt(1000), big.NewInt(5000), big.NewInt(10000)}}, nil
+	case "mode":
+		return []any{uint8(2)}, nil // enum Mode: 0 = Idle, 1 = Active, 2 = Halted
+	case "extraData":
+		return []any{[]byte{0xde, 0xad, 0xbe, 0xef}}, nil
+
 	default:
 		return nil, fmt.Errorf("demo reader has no value for method %q", call.Method)
 	}
+}
+
+// demoMerkleRoot is the fixed bytes32 value the demo vault reports, in the same
+// [32]byte form a live eth_call would decode to.
+func demoMerkleRoot() [32]byte {
+	var root [32]byte
+	copy(root[:], common.FromHex("0xa1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"))
+	return root
 }

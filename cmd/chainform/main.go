@@ -22,9 +22,12 @@ func main() {
 	if err := cli.NewRootCmd(version).ExecuteContext(ctx); err != nil {
 		var exitErr *cli.ExitError
 		if errors.As(err, &exitErr) {
+			// Drift: the plan was printed, the run itself succeeded.
 			os.Exit(exitErr.Code)
 		}
+		// A command that could not complete exits with a code of its own, so CI
+		// never mistakes a broken run for detected drift.
 		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
+		os.Exit(cli.ExitFailure)
 	}
 }

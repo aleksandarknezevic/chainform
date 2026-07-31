@@ -111,12 +111,42 @@ resource "contract" "protocol" {
 | `abi`      | yes      | Path to the contract ABI JSON, resolved relative to the working directory.               |
 | _(others)_ | no       | Each must have a matching getter `X()` and setter `setX(T)` of the same type in the ABI. |
 
-Supported attribute types: `bool`, `string`, `address`, and the integer types
-`uintN` / `intN`. An attribute with a getter but no `setX` setter (a read-only
-value) cannot be managed, and declaring it as a top-level attribute is an error
-- use an [`expect` block](#expect-block--read-only-assertions) to assert it
-instead. Only declared attributes are read and managed; omit one to leave it
-untouched.
+An attribute with a getter but no `setX` setter (a read-only value) cannot be
+managed, and declaring it as a top-level attribute is an error - use an
+[`expect` block](#expect-block---read-only-assertions) to assert it instead. Only
+declared attributes are read and managed; omit one to leave it untouched.
+
+#### Supported attribute types
+
+| ABI type         | Written as                              | Example                            |
+| ---------------- | --------------------------------------- | ---------------------------------- |
+| `bool`           | boolean                                 | `paused = false`                   |
+| `string`         | string                                  | `label = "main"`                   |
+| `address`        | 0x hex string                           | `owner = "0x1a9C…35BC"`            |
+| `uintN` / `intN` | number                                  | `feeBps = 30`                      |
+| enum             | number (an enum is `uint8` on the wire) | `mode = 1`                         |
+| `bytes`          | 0x hex string, any length               | `extraData = "0xdeadbeef"`         |
+| `bytesN`         | 0x hex string of exactly N bytes        | `merkleRoot = "0xa1b2…8f90"`       |
+| `T[]`            | list of T                               | `keepers = ["0x11…11", "0x22…22"]` |
+| `T[N]`           | list of T with exactly N elements       | `tierCaps = [1000, 5000, 10000]`   |
+
+Runnable example: [`examples/vault.hcl`](../examples/vault.hcl)
+(`chainform plan -f examples/vault.hcl --mock`).
+
+Notes:
+
+- The `0x` prefix is optional on byte values; `bytesN` is length-checked, so a
+  truncated hash is rejected at load time rather than encoded.
+- Lists compare element by element: order and length are part of the value, so
+  reordering `keepers` is drift and produces a `setKeepers` call with the full
+  desired list. There is no per-element add/remove operation.
+- Nested lists (`address[][]`) work; elements follow the rules above.
+- **Structs (tuples) are not supported**, as an attribute value, an `expect`
+  value, or a getter return type. A tuple's ABI type string cannot be turned
+  back into a type, so a struct-valued getter or setter is skipped when
+  attributes are derived: it never appears in `show`, `import`, or as a
+  manageable attribute, and declaring it is an error. See the
+  [roadmap](roadmap.md).
 
 A `contract` with no managed attributes is valid - it is read-only and
 produces no operations, but `chainform show` still prints every getter derived
@@ -174,6 +204,14 @@ checks without contacting the chain. Each resource is built (`resource.Build`):
 unknown types, invalid addresses, missing ABI files, and attributes without a
 matching getter/setter pair are rejected.
 
-`chainform plan` exits with code **0** when there is no drift and **1** when
-managed attributes differ or an `expect` assertion fails (the plan is still
-printed to stdout). Use this for simple CI gates without parsing JSON.
+Exit codes are part of the CLI contract, so a CI gate needs no output parsing:
+
+| Code | Meaning                                                                            |
+| ---- | ---------------------------------------------------------------------------------- |
+| `0`  | No drift. Actual state matches desired state.                                       |
+| `1`  | `plan` detected drift: a managed attribute differs or an `expect` assertion failed. |
+| `2`  | The command could not run - unreadable config, invalid resource, RPC error.         |
+
+On drift the plan is still printed to stdout; on failure nothing is planned and
+the error goes to stderr. See the [GitHub Action](github-action.md) for a
+ready-made gate.

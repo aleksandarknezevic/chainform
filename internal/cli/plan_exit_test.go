@@ -45,6 +45,31 @@ func TestPlanCmd_ExitCodeOnDrift(t *testing.T) {
 	}
 }
 
+// A run that cannot complete must not look like drift: it returns an ordinary
+// error, which the entrypoint maps to ExitFailure rather than ExitDrift. CI
+// gates (and the shipped action) rely on telling the two apart.
+func TestPlanCmd_FailureIsNotDrift(t *testing.T) {
+	t.Chdir(repoRoot(t))
+
+	root := cli.NewRootCmd("test")
+	var out bytes.Buffer
+	root.SetOut(&out)
+	root.SetErr(&out)
+	root.SetArgs([]string{"plan", "-f", filepath.Join(t.TempDir(), "missing.hcl"), "--mock"})
+
+	err := root.Execute()
+	if err == nil {
+		t.Fatal("expected an error for a missing configuration file")
+	}
+	var exitErr *cli.ExitError
+	if errors.As(err, &exitErr) {
+		t.Fatalf("missing config reported as drift (ExitError code %d)", exitErr.Code)
+	}
+	if cli.ExitDrift == cli.ExitFailure {
+		t.Fatal("drift and failure must use distinct exit codes")
+	}
+}
+
 func TestPlanCmd_ExitCodeNoDrift(t *testing.T) {
 	rootDir := repoRoot(t)
 	t.Chdir(rootDir)

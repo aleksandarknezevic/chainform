@@ -56,7 +56,7 @@ func newPlanCmd() *cobra.Command {
 				p.Render(cmd.OutOrStdout())
 			}
 			if p.HasDrift() {
-				return &ExitError{Code: 1}
+				return &ExitError{Code: ExitDrift}
 			}
 			return nil
 		},

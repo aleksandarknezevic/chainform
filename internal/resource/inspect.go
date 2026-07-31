@@ -2,10 +2,6 @@ package resource
 
 import (
 	"context"
-	"fmt"
-	"math/big"
-
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/aleksandarknezevic/chainform/internal/chain"
 )
@@ -29,16 +25,8 @@ type Inspector interface {
 }
 
 // FormatValue renders a decoded on-chain value for human-readable display:
-// integers in base 10, addresses as checksummed hex, strings quoted.
+// integers in base 10, addresses as checksummed hex, strings quoted, bytes as
+// 0x-prefixed hex, and lists as comma-separated elements in brackets.
 func FormatValue(v any) string {
-	switch x := v.(type) {
-	case *big.Int:
-		return x.String()
-	case common.Address:
-		return x.Hex()
-	case string:
-		return fmt.Sprintf("%q", x)
-	default:
-		return fmt.Sprintf("%v", x)
-	}
+	return formatValue(v, true)
 }

@@ -54,6 +54,10 @@ func arguments(types []string) (abi.Arguments, error) {
 		if t == "" {
 			continue
 		}
+		if !SupportedType(t) {
+			return nil, fmt.Errorf("abi type %d (%q): unsupported type (tuples/structs, "+
+				"fixed-point and function types cannot be encoded)", i, t)
+		}
 		ty, err := abi.NewType(t, "", nil)
 		if err != nil {
 			return nil, fmt.Errorf("abi type %d (%q): %w", i, t, err)

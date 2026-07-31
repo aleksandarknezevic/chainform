@@ -4,8 +4,9 @@ This is the full **managed-reconciliation** loop end to end, entirely offline.
 Every command below uses `--mock` (a built-in demo reader) so you can follow
 along without an RPC endpoint or a real contract.
 
-For **live mainnet** read-only monitoring (Lido + Chainlink, no `--mock`), see
-**[mainnet-example.md](mainnet-example.md)**.
+For the same loop on a **real mainnet contract** (Uniswap V3 Factory), see
+**[golden-path.md](golden-path.md)**; for live read-only monitoring (Lido +
+Chainlink), **[mainnet-example.md](mainnet-example.md)**.
 
 Drop `--mock` and set `RPC_URL` to run it for real.
 
@@ -157,6 +158,23 @@ contract.main @ 0xF38D8Be3E0A7B3c94C00a25b4A443ca062f343f5
   paused = true
 ```
 
+## 6. Richer attribute types
+
+The same loop handles arrays, `bytes32`, `bytes` and enums - see
+[`examples/vault.hcl`](../examples/vault.hcl):
+
+```bash
+./bin/chainform plan -f examples/vault.hcl --mock
+```
+
+```
+  1. vault.setKeepers([0x1111…1111, 0x2222…2222, 0x4444…4444])
+  2. vault.setMode(1)
+```
+
+Lists compare element by element, so adding one keeper rewrites the whole list
+with `setKeepers`. Full type table: [configuration.md](configuration.md#supported-attribute-types).
+
 ## Going live
 
 Everything above used `--mock`. To run against a real network, drop `--mock`
@@ -167,3 +185,5 @@ export RPC_URL=https://sepolia.infura.io/v3/<key>
 ./bin/chainform show -f protocol.hcl
 ./bin/chainform plan -f protocol.hcl
 ```
+
+To gate this in CI, see the [GitHub Action](github-action.md).

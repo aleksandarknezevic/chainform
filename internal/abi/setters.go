@@ -4,6 +4,8 @@ import (
 	"sort"
 
 	ethabi "github.com/ethereum/go-ethereum/accounts/abi"
+
+	"github.com/aleksandarknezevic/chainform/internal/chain"
 )
 
 // Setter describes a single state-mutating function that takes exactly one
@@ -14,7 +16,9 @@ type Setter struct {
 }
 
 // Setters returns all setter candidates from a parsed ABI.
-// A setter is a non-constant (state-mutating) function with exactly 1 input.
+// A setter is a non-constant (state-mutating) function with exactly 1 input
+// whose type ChainForm can encode (chain.SupportedType), so a setter taking a
+// struct is not offered as manageable.
 func Setters(parsed *ethabi.ABI) []Setter {
 	var out []Setter
 	for _, method := range parsed.Methods {
@@ -22,6 +26,9 @@ func Setters(parsed *ethabi.ABI) []Setter {
 			continue
 		}
 		if len(method.Inputs) != 1 {
+			continue
+		}
+		if !chain.SupportedType(method.Inputs[0].Type.String()) {
 			continue
 		}
 		out = append(out, Setter{

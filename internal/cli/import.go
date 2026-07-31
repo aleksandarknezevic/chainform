@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/spf13/cobra"
 	"github.com/zclconf/go-cty/cty"
 
@@ -148,7 +149,9 @@ func importReader(ctx context.Context, rpc string, mock bool) (chain.Reader, fun
 }
 
 // goToCty converts a value decoded from the chain into a cty value for HCL
-// serialization. Integers are written as numbers, addresses as hex strings.
+// serialization. Integers are written as numbers, addresses and bytes as hex
+// strings, and slices or arrays as HCL lists — each in the form the loader
+// accepts back, so `import` output round-trips to a no-drift plan.
 func goToCty(v any) (cty.Value, error) {
 	switch x := v.(type) {
 	case bool:
@@ -159,6 +162,8 @@ func goToCty(v any) (cty.Value, error) {
 		return cty.StringVal(x.Hex()), nil
 	case *big.Int:
 		return cty.NumberVal(new(big.Float).SetInt(x)), nil
+	case []byte:
+		return cty.StringVal(hexutil.Encode(x)), nil
 	}
 	rv := reflect.ValueOf(v)
 	switch rv.Kind() {
@@ -166,6 +171,25 @@ func goToCty(v any) (cty.Value, error) {
 		return cty.NumberIntVal(rv.Int()), nil
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return cty.NumberUIntVal(rv.Uint()), nil
+	case reflect.Slice, reflect.Array:
+		// bytesN decodes to [N]byte; write it as hex like dynamic bytes.
+		if rv.Type().Elem().Kind() == reflect.Uint8 {
+			b := make([]byte, rv.Len())
+			reflect.Copy(reflect.ValueOf(b), rv)
+			return cty.StringVal(hexutil.Encode(b)), nil
+		}
+		items := make([]cty.Value, rv.Len())
+		for i := range items {
+			cv, err := goToCty(rv.Index(i).Interface())
+			if err != nil {
+				return cty.NilVal, fmt.Errorf("[%d]: %w", i, err)
+			}
+			items[i] = cv
+		}
+		if len(items) == 0 {
+			return cty.EmptyTupleVal, nil
+		}
+		return cty.TupleVal(items), nil
 	default:
 		return cty.NilVal, fmt.Errorf("unsupported value type %T", v)
 	}

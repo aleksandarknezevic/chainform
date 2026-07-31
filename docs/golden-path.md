@@ -1,0 +1,235 @@
+# Golden path - adopt ChainForm on a real contract
+
+One walkthrough, end to end, on a contract you can look up in a block explorer:
+**import → plan → edit → plan → export → Safe**. It is the whole loop ChainForm
+implements today, with nothing mocked and nothing signed.
+
+The subject is the **Uniswap V3 Factory** on Ethereum mainnet:
+
+- [`0x1F98431c8aD98523631AE4a59f267346ea31F984`](https://etherscan.io/address/0x1F98431c8aD98523631AE4a59f267346ea31F984)
+- It exposes `owner()` and `setOwner(address)` - a getter/setter pair, so
+  `owner` is a **managed** attribute: ChainForm can both read it and produce the
+  call that changes it.
+
+Why this contract: the pair is real, the value is public, and one attribute is
+enough to see every step. What you cannot do is *execute* the result - the
+factory's owner is Uniswap governance, not you. Step 6 covers what changes when
+the contract is yours.
+
+If you want the read-only monitoring pattern instead (`expect` on contracts you
+don't control), see [mainnet-example.md](mainnet-example.md).
+
+## Prerequisites
+
+- ChainForm installed (`make build`, `go install`, a
+  [release binary](https://github.com/aleksandarknezevic/chainform/releases), or
+  [Docker](../README.md#docker))
+- A mainnet JSON-RPC URL
+- Run from the **repository root**, so the ABI path below resolves
+
+```bash
+export RPC_URL=https://your-mainnet-rpc.example
+```
+
+No endpoint handy? Every command below also runs offline with `--mock` - see
+[Offline](#offline-same-path-no-endpoint).
+
+## 1. Import: snapshot the live contract into config
+
+You don't start from an empty file. Point `import` at the address and its ABI
+and it writes the current on-chain state as configuration:
+
+```bash
+chainform import \
+  --address 0x1F98431c8aD98523631AE4a59f267346ea31F984 \
+  --abi testdata/uniswap-v3-factory.abi.json \
+  --name factory --chain-id 1 --chain-name ethereum \
+  --rpc "$RPC_URL" \
+  -o factory.hcl
+```
+
+`factory.hcl`:
+
+```hcl
+version = "1"
+
+chain {
+  name     = "ethereum"
+  chain_id = 1
+  rpc      = env("RPC_URL")
+}
+
+resource "contract" "factory" {
+  address = "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+  abi     = "testdata/uniswap-v3-factory.abi.json"
+
+  owner = "0x1a9C8182C09F50C8318d769245beA52c32BE35BC"
+}
+```
+
+The `owner` value is whatever the contract returns when you run it - the address
+above is the Uniswap governance timelock, current when this page was written.
+Only `owner` shows up because it is the only attribute the ABI exposes as a
+zero-argument getter with a matching setter: `getPool` and
+`feeAmountTickSpacing` take arguments, `enableFeeAmount` has no getter.
+
+The ABI in `testdata/` is trimmed to the functions this example uses. For your
+own contract, download the ABI from the block explorer or your build artifacts.
+
+## 2. Plan: a faithful snapshot has no drift
+
+```bash
+chainform plan -f factory.hcl
+```
+
+```
+No drift. Actual on-chain state matches desired state.
+```
+
+Exit code **0**. This is the point of `import`: you adopt ChainForm without
+proposing a single change. Commit `factory.hcl` and this is your baseline.
+
+## 3. Gate it in CI (optional, one step)
+
+Because `plan` exits **1** on drift and **2** only when it cannot run, a CI job
+needs no output parsing. Use the shipped action:
+
+```yaml
+- uses: actions/checkout@v4
+- uses: aleksandarknezevic/chainform@v0.0.2
+  with:
+      file: factory.hcl
+      rpc-url: ${{ secrets.RPC_URL }}
+```
+
+From here on, any change to `owner` on chain - by anyone - fails the job. Full
+options in [github-action.md](github-action.md).
+
+## 4. Change desired state, then plan again
+
+Now do the thing you adopted the tool for: edit the config, not a script. Set a
+different desired owner in `factory.hcl`:
+
+```hcl
+  owner = "0x000000000000000000000000000000000000dEaD"
+```
+
+```bash
+chainform plan -f factory.hcl
+```
+
+```
+Plan: 1 operation(s) on ethereum (chainId 1)
+
+  1. factory.setOwner(0x000000000000000000000000000000000000dEaD)
+       to:       0x1F98431c8aD98523631AE4a59f267346ea31F984
+       drift:    owner: 0x1a9C8182C09F50C8318d769245beA52c32BE35BC -> 0x000000000000000000000000000000000000dEaD
+       calldata: 0x13af4035000000000000000000000000000000000000000000000000000000000000dead
+```
+
+Exit code **1**. ChainForm derived the call from the ABI: attribute `owner` →
+setter `setOwner(address)` → encoded calldata. It did **not** send anything.
+
+Review the calldata yourself - it is the artifact a signer will approve:
+
+```bash
+cast sig "setOwner(address)"   # 0x13af4035 — matches the first 4 bytes
+```
+
+The rest is the 32-byte, left-padded argument. For machine review, the same plan
+as JSON (see [plan-json.md](plan-json.md)):
+
+```bash
+chainform plan -f factory.hcl --json | jq '.operations[]'
+```
+
+## 5. Export: a batch a multisig can review and sign
+
+```bash
+chainform export -f factory.hcl -o batch.json
+```
+
+```json
+{
+  "version": "1.0",
+  "chainId": "1",
+  "createdAt": 1785491242803,
+  "meta": {
+    "name": "ChainForm Plan",
+    "description": "1 operation(s) generated by ChainForm"
+  },
+  "transactions": [
+    {
+      "to": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+      "value": "0",
+      "data": "0x13af4035000000000000000000000000000000000000000000000000000000000000dead"
+    }
+  ]
+}
+```
+
+To execute it, in the [Safe](https://app.safe.global) web app:
+
+1. Open your Safe → **Transaction Builder**.
+2. Drag `batch.json` in (or use its "Load JSON" option).
+3. Check every transaction against the plan output: `to`, `value`, and the
+   calldata.
+4. Create the batch, then collect signatures and execute as usual.
+
+ChainForm's job ends at step 2. It holds no keys, sends nothing, and has no idea
+whether you executed - the next `plan` simply reads the chain again. When the
+change lands, `plan` returns to "No drift" and your CI gate goes green.
+
+Read-only `expect` assertions never become transactions, so a failing invariant
+shows up in `plan` but never in `batch.json`.
+
+## 6. Doing this on a contract you own
+
+Everything above is real except the last mile: the factory's owner is Uniswap
+governance, so a Safe you control cannot execute that batch. On your own
+contracts, the same five commands finish the loop:
+
+1. `import` your contract (its ABI, its address).
+2. Commit the config; gate PRs on `plan`.
+3. Change a value in a pull request - the diff *is* the change proposal, and the
+   plan in the job summary is the review artifact.
+4. `export` and execute through the Safe or governance process that owns the
+   contract.
+
+For attributes with a getter but no setter, use an
+[`expect` block](configuration.md#expect-block---read-only-assertions): they are
+asserted, never converged. `pause`/`unpause` are used automatically for a
+`paused` attribute when the ABI has them, and arrays, `bytes32`, `bytes` and
+enums are supported as attribute types - see the
+[configuration reference](configuration.md#supported-attribute-types).
+
+## Offline: same path, no endpoint
+
+Every step runs against the built-in demo reader; only `--mock` is added and
+`--rpc`/`RPC_URL` is dropped:
+
+```bash
+chainform import --address 0x1F98431c8aD98523631AE4a59f267346ea31F984 \
+  --abi testdata/uniswap-v3-factory.abi.json \
+  --name factory --chain-id 1 --mock -o factory.hcl
+
+chainform plan   -f factory.hcl --mock            # No drift
+# edit owner in factory.hcl, then:
+chainform plan   -f factory.hcl --mock            # 1 operation, exit 1
+chainform export -f factory.hcl --mock -o batch.json
+```
+
+The demo reader reports a fixed owner, so the imported value differs from
+mainnet - the flow is identical.
+
+## What this does not do
+
+- No signing, no sending, no key handling - export and execute elsewhere.
+- No governance proposals yet (Safe batch JSON only).
+- One chain per config file.
+
+Those are tracked in the [roadmap](roadmap.md).
+
+Related: [configuration reference](configuration.md) ·
+[offline walkthrough](walkthrough.md) · [mainnet monitoring](mainnet-example.md) ·
+[GitHub Action](github-action.md)

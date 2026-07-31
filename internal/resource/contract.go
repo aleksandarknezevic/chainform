@@ -29,10 +29,10 @@ func init() {
 type contractResource struct {
 	name    string
 	address common.Address
-	attrs   map[string]managedAttr // attribute name -> derived getter/setter
-	desired map[string]any         // attribute name -> canonical desired value
-	expects map[string]expectAttr  // read-only assertion -> getter + expected
-	getters []abi.Getter           // all readable getters, for `show` (sorted)
+	attrs   map[string]managedAttr    // attribute name -> derived getter/setter
+	desired map[string]any            // attribute name -> canonical desired value
+	expects map[string]expectAttr     // read-only assertion -> getter + expected
+	getters []abi.Getter              // all readable getters, for `show` (sorted)
 	toggles map[string]abi.TogglePair // bool getter -> pause/unpause-style pair
 }
 

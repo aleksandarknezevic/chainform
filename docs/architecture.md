@@ -27,9 +27,9 @@ minimal set of operations needed to converge them.
 
 | Package | Responsibility | Depends on |
 | --- | --- | --- |
-| `internal/config` | Desired-state schema, HCL loader, validation | - |
-| `internal/chain` | EVM reads (`Reader`), ABI encode/decode, live + mock readers | go-ethereum |
-| `internal/abi` | ABI loader; derives getters/setters/attributes for ABI-driven resources | go-ethereum |
+| `internal/config` | Desired-state schema, HCL/JSON loader, validation | - |
+| `internal/chain` | EVM reads (`Reader`), ABI encode/decode, type support, live + mock readers | go-ethereum |
+| `internal/abi` | ABI loader; derives getters/setters/attributes for ABI-driven resources | `chain`, go-ethereum |
 | `internal/resource` | `Resource` contract, `Operation`, type registry, `protocol` + ABI-driven `contract` | `config`, `chain`, `abi` |
 | `internal/plan` | Reconciliation pass + human-readable rendering | `config`, `chain`, `resource` |
 | `internal/export` | Render a plan into executable formats (Safe batch) | `plan` |
@@ -71,6 +71,26 @@ sends a transaction - execution is intentionally a separate, explicit step
 - **Encoding is centralized.** All ABI packing/decoding lives in
   [`internal/chain/abi.go`](../internal/chain/abi.go), so resources describe
   calls by name + types and never touch keccak or padding.
+- **Types are described by string.** A call carries ABI type strings
+  (`["address[]"]`), which keeps `ViewCall` and `Operation` free of go-ethereum
+  types - at the cost of tuples, whose type string cannot be parsed back into a
+  type. [`chain.SupportedType`](../internal/chain/types.go) is the single place
+  that decides what ChainForm can encode or decode; unsupported getters and
+  setters are filtered out when attributes are derived, and encoding rejects
+  them, so nothing is ever silently mis-decoded.
 
-See [concepts.md](concepts.md) for the vocabulary, [mainnet-example.md](mainnet-example.md)
-for a live Ethereum walkthrough, and [roadmap.md](roadmap.md) for where this is heading.
+## The value layer
+
+Three representations of one attribute value meet in
+[`internal/resource/value.go`](../internal/resource/value.go): what the config
+loader produced (`bool`, `string`, `int`, `[]any`), what the chain decoded
+(`*big.Int`, `common.Address`, `[32]byte`, `[]common.Address`, …), and the exact
+Go type the ABI encoder wants. `canonical` folds the first two into one
+comparable form so drift detection is decoder-agnostic; `setterArg` produces the
+third. Adding an attribute type means teaching those two functions (plus
+`chain.SupportedType`) about it - not touching resources.
+
+See [concepts.md](concepts.md) for the vocabulary, [golden-path.md](golden-path.md)
+for the full loop on a real mainnet contract, [mainnet-example.md](mainnet-example.md)
+for live read-only monitoring, and [roadmap.md](roadmap.md) for where this is
+heading.

@@ -70,11 +70,19 @@ package. Argument Go types must match the ABI types:
 
 | ABI type | Go type |
 | --- | --- |
-| `uint256` / `uint*` | `*big.Int` |
+| `uint256` / `uint*` (widths other than 8/16/32/64) | `*big.Int` |
+| `uint8` / `uint16` / `uint32` / `uint64` (and signed) | the matching sized Go integer |
 | `address` | `common.Address` |
 | `bool` | `bool` |
 | `bytes` / `bytesN` | `[]byte` / `[N]byte` |
 | `string` | `string` |
+| `T[]` / `T[N]` | `[]T` / `[N]T` of the element's Go type |
+
+Rather than hand-rolling these conversions, reuse the value layer in
+[`internal/resource/value.go`](../internal/resource/value.go): `canonical`
+normalizes a config or chain value for comparison, and `setterArg` produces the
+exact type the encoder expects. Types ChainForm cannot handle (tuples above all)
+are rejected by `chain.SupportedType`, so don't invent a representation for them.
 
 When a resource grows beyond a couple of attributes, prefer driving it from a
 parsed contract ABI rather than hand-written getters/setters - see the roadmap.

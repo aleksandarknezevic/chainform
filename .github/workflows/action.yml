@@ -1,0 +1,123 @@
+name: Action
+
+# Exercises the reusable action in this repository (action.yml) end to end,
+# offline, with `version: source` so no release download is required.
+
+on:
+    pull_request:
+    push:
+        branches:
+            - main
+
+permissions:
+    contents: read
+
+jobs:
+    drift:
+        name: Reports drift
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version-file: go.mod
+                  cache: true
+
+            - name: Run chainform plan
+              id: plan
+              uses: ./
+              with:
+                  file: examples/vault.hcl
+                  version: source
+                  mock: "true"
+                  json: "true"
+                  fail-on-drift: "false"
+
+            - name: Assert drift is reported
+              run: |
+                  set -euo pipefail
+                  test "${{ steps.plan.outputs.drift }}" = "true"
+                  test "${{ steps.plan.outputs.exit-code }}" = "1"
+                  jq -e '.summary.operationCount == 2' "${{ steps.plan.outputs.plan-json-file }}"
+                  jq -e '[.operations[].method] == ["setKeepers", "setMode"]' "${{ steps.plan.outputs.plan-json-file }}"
+
+    gate:
+        name: Fails the job on drift
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version-file: go.mod
+                  cache: true
+
+            - name: Run chainform plan (expected to fail)
+              id: plan
+              uses: ./
+              continue-on-error: true
+              with:
+                  file: examples/protocol.hcl
+                  version: source
+                  mock: "true"
+
+            - name: Assert the step failed
+              run: |
+                  set -euo pipefail
+                  test "${{ steps.plan.outcome }}" = "failure"
+
+    no-drift:
+        name: Passes when state matches
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version-file: go.mod
+                  cache: true
+
+            # The demo reader reports feeBps = 50 and paused = true, so this
+            # config is already converged.
+            - name: Write a converged config
+              run: |
+                  cat > converged.hcl <<'EOF'
+                  version = "1"
+
+                  chain {
+                    name     = "ethereum"
+                    chain_id = 1
+                  }
+
+                  resource "contract" "main" {
+                    address = "0xF38D8Be3E0A7B3c94C00a25b4A443ca062f343f5"
+                    abi     = "testdata/protocol.abi.json"
+
+                    feeBps = 50
+                    paused = true
+                  }
+                  EOF
+
+            - name: Run chainform plan
+              id: plan
+              uses: ./
+              with:
+                  file: converged.hcl
+                  version: source
+                  mock: "true"
+
+            - name: Assert no drift
+              run: |
+                  set -euo pipefail
+                  test "${{ steps.plan.outputs.drift }}" = "false"
+                  test "${{ steps.plan.outputs.exit-code }}" = "0"

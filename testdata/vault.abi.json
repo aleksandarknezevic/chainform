@@ -1,0 +1,113 @@
+[
+  {
+    "inputs": [],
+    "name": "keepers",
+    "outputs": [{ "internalType": "address[]", "name": "", "type": "address[]" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address[]", "name": "accounts", "type": "address[]" }],
+    "name": "setKeepers",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "guardians",
+    "outputs": [{ "internalType": "address[]", "name": "", "type": "address[]" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "merkleRoot",
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes32", "name": "root", "type": "bytes32" }],
+    "name": "setMerkleRoot",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tierCaps",
+    "outputs": [{ "internalType": "uint256[3]", "name": "", "type": "uint256[3]" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256[3]", "name": "caps", "type": "uint256[3]" }],
+    "name": "setTierCaps",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "mode",
+    "outputs": [{ "internalType": "enum Vault.Mode", "name": "", "type": "uint8" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "enum Vault.Mode", "name": "newMode", "type": "uint8" }],
+    "name": "setMode",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "extraData",
+    "outputs": [{ "internalType": "bytes", "name": "", "type": "bytes" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes", "name": "data", "type": "bytes" }],
+    "name": "setExtraData",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "riskParams",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "uint256", "name": "maxLoss", "type": "uint256" },
+          { "internalType": "uint16", "name": "ltvBps", "type": "uint16" }
+        ],
+        "internalType": "struct Vault.RiskParams",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          { "internalType": "uint256", "name": "maxLoss", "type": "uint256" },
+          { "internalType": "uint16", "name": "ltvBps", "type": "uint16" }
+        ],
+        "internalType": "struct Vault.RiskParams",
+        "name": "params",
+        "type": "tuple"
+      }
+    ],
+    "name": "setRiskParams",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
