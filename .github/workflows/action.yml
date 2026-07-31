@@ -68,10 +68,15 @@ jobs:
                   version: source
                   mock: "true"
 
-            - name: Assert the step failed
+            # The step must fail *because of the gate*, not because it crashed:
+            # outputs are written before the gate exits, so they must be present.
+            - name: Assert the step failed on drift
               run: |
                   set -euo pipefail
                   test "${{ steps.plan.outcome }}" = "failure"
+                  test "${{ steps.plan.outputs.drift }}" = "true"
+                  test "${{ steps.plan.outputs.exit-code }}" = "1"
+                  grep -q "setFeeBps" "${{ steps.plan.outputs.plan-file }}"
 
     no-drift:
         name: Passes when state matches

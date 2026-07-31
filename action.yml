@@ -122,9 +122,14 @@ runs:
         # Release assets ship a SHA256SUMS file; verify before running a binary
         # that produces multisig calldata.
         if curl -fsSL -o "$bindir/SHA256SUMS" "${base}/SHA256SUMS"; then
-          ( cd "$bindir" && grep " ${asset}\$" SHA256SUMS > expected.sha256 \
-            && { command -v sha256sum >/dev/null && sha256sum -c expected.sha256 \
-                 || shasum -a 256 -c expected.sha256; } )
+          cd "$bindir"
+          grep " ${asset}\$" SHA256SUMS > expected.sha256
+          if command -v sha256sum >/dev/null; then
+            sha256sum -c expected.sha256
+          else
+            shasum -a 256 -c expected.sha256
+          fi
+          cd - >/dev/null
         else
           echo "::warning::no SHA256SUMS published for ${tag}; skipping checksum verification"
         fi
@@ -153,15 +158,20 @@ runs:
           args+=(--mock)
         fi
 
+        # `plan` exits 1 on drift by design. GitHub runs composite bash steps
+        # with `-e`, which would abort here before any output is set, so
+        # errexit is disabled for the run itself and the code handled below.
         plan_file="${RUNNER_TEMP}/chainform-plan.txt"
+        set +e
         chainform "${args[@]}" | tee "$plan_file"
         code=${PIPESTATUS[0]}
 
         json_file=""
         if [ "$INPUT_JSON" = "true" ]; then
           json_file="${RUNNER_TEMP}/chainform-plan.json"
-          chainform "${args[@]}" --json > "$json_file" || true
+          chainform "${args[@]}" --json > "$json_file"
         fi
+        set -e
 
         drift=false
         if [ "$code" -eq 1 ]; then
